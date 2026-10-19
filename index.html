@@ -14,32 +14,30 @@
 :root{--green:#1a3c34;--green2:#24574a;--cream:#f5f1e8;--gold:#c9973f;--text:#1f2a27;--muted:#5b6b66;--radius:16px}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--cream);color:var(--text);line-height:1.45}
-.top{background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top))}
+.top{background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
 .brand{display:flex;align-items:center;gap:12px;max-width:1200px;margin:0 auto}
 .brand img{border-radius:10px}
-.brand-text{flex:1;min-width:0}
 .brand h1{margin:0;font-size:20px;letter-spacing:.3px}
 .brand p{margin:2px 0 0;font-size:13px;opacity:.85}
 .total{display:inline-block;margin-top:4px;background:var(--gold);color:#fff;font-weight:700;font-size:13px;padding:2px 10px;border-radius:999px}
-.lang{display:flex;gap:4px;align-self:flex-start}
-.lang button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 9px;font-weight:700;font-size:13px;cursor:pointer}
-.lang button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
-.lang button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .offline{background:#fff4d6;color:#7a5a00;padding:10px 16px;text-align:center;font-size:14px}
 .controls{position:sticky;top:0;z-index:1000;background:var(--cream);padding:10px 16px 6px;max-width:1200px;margin:0 auto}
-#search{width:100%;font-size:16px;padding:12px 14px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--text)}
+.search-row{display:flex;gap:6px;align-items:center}
+#search{flex:1;min-width:0;font-size:16px;padding:11px 12px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--text)}
 #search:focus{outline:3px solid rgba(201,151,63,.45);border-color:var(--gold)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.lang{display:flex;gap:3px;flex:0 0 auto}
+.lang button{background:#fff;color:var(--green);border:1px solid #d9d2c3;border-radius:8px;padding:6px 6px;font-weight:700;font-size:11px;min-width:30px;min-height:32px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid #d9d2c3;background:#fff;color:var(--text);padding:8px 14px;border-radius:999px;font-size:14px;cursor:pointer}
+.chip{flex:0 0 auto;white-space:nowrap;border:1px solid #d9d2c3;background:#fff;color:var(--text);padding:7px 11px;border-radius:999px;font-size:13px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
-.chip .n{opacity:.7;font-size:12px;margin-left:2px}
-.chips.types .chip{font-size:13px;padding:6px 12px}
+.chip .n{font-size:12px;font-weight:700;opacity:.75}
 .chips.types .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
-.chip:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.chip:focus-visible,.lang button:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .layout{max-width:1200px;margin:0 auto;padding:6px 16px 16px}
 #map{position:relative;isolation:isolate;height:45vh;min-height:280px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.08)}
-.count{color:var(--text);font-size:15px;font-weight:600;margin:14px 2px 8px}
+.count{font-size:15px;font-weight:600;margin:14px 2px 8px}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .card{display:flex;background:#fff;border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
 .card-main{flex:1;display:flex;gap:12px;text-align:left;background:none;border:0;padding:14px;font:inherit;color:inherit;cursor:pointer}
@@ -72,20 +70,22 @@ footer a{color:var(--green);font-weight:600}
 <header class="top">
   <div class="brand">
     <img src="icon.svg" alt="" width="36" height="36">
-    <div class="brand-text">
+    <div>
       <h1>FotoVietos LT</h1>
       <p id="sub"></p>
       <span id="total" class="total"></span>
     </div>
-    <div id="lang" class="lang" role="group"></div>
   </div>
 </header>
 
 <div id="offline" class="offline" role="status" hidden></div>
 
 <div class="controls">
-  <label id="searchLabel" class="visually-hidden" for="search"></label>
-  <input id="search" type="search" autocomplete="off">
+  <div class="search-row">
+    <label id="searchLabel" class="visually-hidden" for="search"></label>
+    <input id="search" type="search" autocomplete="off">
+    <div id="lang" class="lang" role="group"></div>
+  </div>
   <div id="filters" class="chips" role="group"></div>
   <div id="types" class="chips types" role="group"></div>
 </div>
@@ -101,101 +101,59 @@ footer a{color:var(--green);font-weight:600}
 <footer>
   <p id="note"></p>
   <p id="bot"></p>
+  <p>Versija 4</p>
 </footer>
 
 <button id="locate" class="fab" type="button">📍</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="vietos.js"></script>
+<script src="vietos.js?v=4"></script>
 <script>
-// ---------- Vertimai ----------
 const I18N = {
   lt: {
-    sub: "Gražiausios vietos fotosesijoms Lietuvoje",
-    total: "Iš viso vietų: {n}",
+    sub: "Gražiausios vietos fotosesijoms Lietuvoje", total: "Iš viso vietų: {n}",
     offline: "Nėra interneto. Žemėlapis užsikraus, kai prisijungsite.",
-    search: "Ieškoti: parkas, pilis, Panevėžys, ežeras...",
-    searchLabel: "Ieškoti vietos",
-    tagsAria: "Kam tinka vieta",
-    typesAria: "Vietos tipas",
-    mapAria: "Žemėlapis",
-    listAria: "Vietų sąrašas",
-    allTags: "Visos",
-    allTypes: "Visi tipai",
-    count: "Rodoma {a} iš {b} vietų",
-    sorted: " · surikiuota pagal atstumą",
+    search: "Ieškoti: parkas, pilis, Panevėžys...", searchLabel: "Ieškoti vietos",
+    tagsAria: "Kam tinka vieta", typesAria: "Vietos tipas", mapAria: "Žemėlapis", listAria: "Vietų sąrašas",
+    allTags: "Visos", allTypes: "Visi tipai", count: "Rodoma {a} iš {b} vietų", sorted: " · pagal atstumą",
     empty: "Nieko nerasta. Pabandykite kitą žodį arba pasirinkite „Visos“ ir „Visi tipai“.",
-    showOnMap: "Rodyti žemėlapyje",
-    openMaps: "Atidaryti Google Maps",
-    layerMap: "Žemėlapis",
-    layerSat: "Palydovas",
-    you: "Jūs čia",
-    locate: "Rodyti mano vietą ir artimiausias vietas",
+    showOnMap: "Rodyti žemėlapyje", openMaps: "Atidaryti Google Maps", layerMap: "Žemėlapis", layerSat: "Palydovas",
+    you: "Jūs čia", locate: "Rodyti mano vietą ir artimiausias vietas",
     noGeo: "Šis įrenginys neleidžia nustatyti vietos.",
     geoDenied: "Leiskite programėlei naudoti vietą (telefono nustatymuose) ir bandykite dar kartą.",
     geoFail: "Nepavyko nustatyti vietos. Įsijunkite GPS ir bandykite dar kartą.",
     note: "Koordinatės apytikslės. Mygtukas 🧭 atidaro Google Maps ir vietos ieško pagal pavadinimą. Dvaruose, muziejuose ir vienuolynuose profesionaliai fotosesijai gali reikėti leidimo ar mokesčio.",
-    botAsk: "Ieškote fotografo?",
-    botLink: "Parašykite Irmantui Telegram'e",
-    langAria: "Kalba"
+    botAsk: "Ieškote fotografo?", botLink: "Parašykite Irmantui Telegram'e", langAria: "Kalba"
   },
   en: {
-    sub: "The most beautiful photo shoot locations in Lithuania",
-    total: "Total places: {n}",
+    sub: "The most beautiful photo shoot locations in Lithuania", total: "Total places: {n}",
     offline: "No internet. The map will load when you are back online.",
-    search: "Search: park, castle, Vilnius, lake...",
-    searchLabel: "Search for a place",
-    tagsAria: "What the place suits",
-    typesAria: "Place type",
-    mapAria: "Map",
-    listAria: "List of places",
-    allTags: "All",
-    allTypes: "All types",
-    count: "Showing {a} of {b} places",
-    sorted: " · sorted by distance",
+    search: "Search: park, castle, Vilnius...", searchLabel: "Search for a place",
+    tagsAria: "What the place suits", typesAria: "Place type", mapAria: "Map", listAria: "List of places",
+    allTags: "All", allTypes: "All types", count: "Showing {a} of {b} places", sorted: " · by distance",
     empty: "Nothing found. Try another word or choose “All” and “All types”.",
-    showOnMap: "Show on map",
-    openMaps: "Open in Google Maps",
-    layerMap: "Map",
-    layerSat: "Satellite",
-    you: "You are here",
-    locate: "Show my location and the nearest places",
+    showOnMap: "Show on map", openMaps: "Open in Google Maps", layerMap: "Map", layerSat: "Satellite",
+    you: "You are here", locate: "Show my location and the nearest places",
     noGeo: "This device cannot determine location.",
     geoDenied: "Allow the app to use your location (in phone settings) and try again.",
     geoFail: "Could not determine your location. Turn on GPS and try again.",
     note: "Coordinates are approximate. The 🧭 button opens Google Maps and searches by name. Manors, museums and monasteries may require a permit or fee for professional shoots.",
-    botAsk: "Looking for a photographer?",
-    botLink: "Message Irmantas on Telegram",
-    langAria: "Language"
+    botAsk: "Looking for a photographer?", botLink: "Message Irmantas on Telegram", langAria: "Language"
   },
   ru: {
-    sub: "Лучшие места для фотосессий в Литве",
-    total: "Всего мест: {n}",
+    sub: "Лучшие места для фотосессий в Литве", total: "Всего мест: {n}",
     offline: "Нет интернета. Карта загрузится, когда появится связь.",
-    search: "Поиск: парк, замок, Вильнюс, озеро...",
-    searchLabel: "Поиск места",
-    tagsAria: "Для чего подходит место",
-    typesAria: "Тип места",
-    mapAria: "Карта",
-    listAria: "Список мест",
-    allTags: "Все",
-    allTypes: "Все типы",
-    count: "Показано {a} из {b} мест",
-    sorted: " · по расстоянию",
+    search: "Поиск: парк, замок, Вильнюс...", searchLabel: "Поиск места",
+    tagsAria: "Для чего подходит место", typesAria: "Тип места", mapAria: "Карта", listAria: "Список мест",
+    allTags: "Все", allTypes: "Все типы", count: "Показано {a} из {b} мест", sorted: " · по расстоянию",
     empty: "Ничего не найдено. Попробуйте другое слово или выберите «Все» и «Все типы».",
-    showOnMap: "Показать на карте",
-    openMaps: "Открыть в Google Maps",
-    layerMap: "Карта",
-    layerSat: "Спутник",
-    you: "Вы здесь",
-    locate: "Показать моё местоположение и ближайшие места",
+    showOnMap: "Показать на карте", openMaps: "Открыть в Google Maps", layerMap: "Карта", layerSat: "Спутник",
+    you: "Вы здесь", locate: "Показать моё местоположение и ближайшие места",
     noGeo: "Это устройство не может определить местоположение.",
     geoDenied: "Разрешите приложению доступ к местоположению (в настройках телефона) и попробуйте снова.",
     geoFail: "Не удалось определить местоположение. Включите GPS и попробуйте снова.",
     note: "Координаты примерные. Кнопка 🧭 открывает Google Maps и ищет по названию. В усадьбах, музеях и монастырях для профессиональной съёмки может понадобиться разрешение или плата.",
-    botAsk: "Ищете фотографа?",
-    botLink: "Напишите Ирмантасу в Telegram",
-    langAria: "Язык"
+    botAsk: "Ищете фотографа?", botLink: "Напишите Ирмантасу в Telegram", langAria: "Язык"
   }
 };
 
@@ -224,8 +182,7 @@ const TAGS = {
 const LANGS = ["lt", "en", "ru"];
 let savedLang = null;
 try { savedLang = localStorage.getItem("lang"); } catch (e) {}
-const LANG = LANGS.includes(savedLang)
-  ? savedLang
+const LANG = LANGS.includes(savedLang) ? savedLang
   : ((navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "lt");
 const LI = LANGS.indexOf(LANG);
 const T = I18N[LANG];
@@ -251,14 +208,13 @@ function distanceKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// Paieška veikia visomis kalbomis
 const SEARCH_TEXT = new Map(SPOTS.map(s => {
   const t = typeOf(s);
   return [s.id, norm([s.n, s.p, allText(s.d), allText(s.tip), allText(t.label), allText(t.plural),
     ...(s.g || []).map(k => allText(TAGS[k]?.label))].join(" "))];
 }));
 
-// ---------- Tekstai puslapyje ----------
+// ---------- Tekstai ----------
 $("sub").textContent = T.sub;
 $("total").textContent = fmt(T.total, { n: TOTAL });
 $("offline").textContent = T.offline;
@@ -285,16 +241,8 @@ langEl.addEventListener("click", e => {
 });
 
 // ---------- Būsena ----------
-let activeTag = "all";
-let activeType = "all";
-let query = "";
-let userPos = null;
-
-const listEl = $("list");
-const countEl = $("count");
-const mapEl = $("map");
-const offlineEl = $("offline");
-const locateBtn = $("locate");
+let activeTag = "all", activeType = "all", query = "", userPos = null;
+const listEl = $("list"), countEl = $("count"), mapEl = $("map"), offlineEl = $("offline"), locateBtn = $("locate");
 
 function updateOnline() { offlineEl.hidden = navigator.onLine; }
 window.addEventListener("online", updateOnline);
@@ -303,8 +251,7 @@ updateOnline();
 
 // ---------- Žemėlapis ----------
 const hasMap = typeof L !== "undefined";
-let map = null;
-let markersLayer = null;
+let map = null, markersLayer = null;
 const markers = new Map();
 
 function popupHtml(s) {
@@ -319,22 +266,14 @@ function popupHtml(s) {
 
 if (hasMap) {
   map = L.map("map").setView([55.2, 23.9], 7);
-  const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: "&copy; OpenStreetMap"
-  });
-  const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 19, attribution: "Tiles &copy; Esri"
-  });
+  const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" });
+  const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Tiles &copy; Esri" });
   osm.addTo(map);
   L.control.layers({ [T.layerMap]: osm, [T.layerSat]: sat }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
-
   SPOTS.forEach(s => {
-    const icon = L.divIcon({
-      className: "pin",
-      html: `<span aria-hidden="true">${typeOf(s).icon}</span>`,
-      iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -16]
-    });
+    const icon = L.divIcon({ className: "pin", html: `<span aria-hidden="true">${typeOf(s).icon}</span>`,
+      iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -16] });
     const marker = L.marker([s.lat, s.lng], { icon, title: s.n });
     marker.bindPopup(popupHtml(s));
     markers.set(s.id, marker);
@@ -343,10 +282,10 @@ if (hasMap) {
   mapEl.hidden = true;
 }
 
-// ---------- Filtrai ----------
+// ---------- Filtrai su skaičiais ----------
 function setupChips(el, defs, onPick) {
   el.innerHTML = defs
-    .map(([key, label, n]) => `<button type="button" class="chip" data-key="${key}" aria-pressed="${key === "all"}">${esc(label)} <span class="n">(${n})</span></button>`)
+    .map(([key, label, n]) => `<button type="button" class="chip" data-key="${key}" aria-pressed="${key === "all"}">${esc(label)} <span class="n">${n}</span></button>`)
     .join("");
   el.addEventListener("click", e => {
     const chip = e.target.closest(".chip");
@@ -357,26 +296,19 @@ function setupChips(el, defs, onPick) {
   });
 }
 
-setupChips(
-  $("filters"),
+setupChips($("filters"),
   [["all", T.allTags, TOTAL], ...Object.entries(TAGS).map(([k, v]) => [k, tr(v.label), SPOTS.filter(s => (s.g || []).includes(k)).length])],
-  key => { activeTag = key; }
-);
+  key => { activeTag = key; });
 
 const usedTypes = Object.keys(TYPES).filter(k => SPOTS.some(s => s.t === k));
-setupChips(
-  $("types"),
+setupChips($("types"),
   [["all", T.allTypes, TOTAL], ...usedTypes.map(k => [k, `${TYPES[k].icon} ${tr(TYPES[k].plural)}`, SPOTS.filter(s => s.t === k).length])],
-  key => { activeType = key; }
-);
+  key => { activeType = key; });
 
 let searchTimer = null;
 $("search").addEventListener("input", e => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    query = norm(e.target.value).trim();
-    render({ fit: true });
-  }, 200);
+  searchTimer = setTimeout(() => { query = norm(e.target.value).trim(); render({ fit: true }); }, 200);
 });
 
 // ---------- Sąrašas ----------
@@ -391,10 +323,8 @@ function matches(s) {
 function cardHtml(s) {
   const t = typeOf(s);
   const dist = s.dist != null ? ` · ${s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)} km` : "";
-  const tags = (s.g || [])
-    .filter(k => TAGS[k])
-    .map(k => `<span class="tag" style="color:${TAGS[k].color};background:${TAGS[k].bg}">${esc(tr(TAGS[k].label))}</span>`)
-    .join("");
+  const tags = (s.g || []).filter(k => TAGS[k])
+    .map(k => `<span class="tag" style="color:${TAGS[k].color};background:${TAGS[k].bg}">${esc(tr(TAGS[k].label))}</span>`).join("");
   return `<li><article class="card">
     <button type="button" class="card-main" data-id="${s.id}" aria-label="${esc(T.showOnMap)}: ${esc(s.n)}">
       <span class="card-icon" aria-hidden="true">${t.icon}</span>
@@ -411,22 +341,14 @@ function cardHtml(s) {
 
 function render({ fit = false } = {}) {
   let list = SPOTS.filter(matches);
-  if (userPos) {
-    list = list.map(s => ({ ...s, dist: distanceKm(userPos, s) })).sort((a, b) => a.dist - b.dist);
-  }
-
+  if (userPos) list = list.map(s => ({ ...s, dist: distanceKm(userPos, s) })).sort((a, b) => a.dist - b.dist);
   if (hasMap) {
     markersLayer.clearLayers();
     list.forEach(s => markersLayer.addLayer(markers.get(s.id)));
-    if (fit && list.length) {
-      map.fitBounds(L.latLngBounds(list.map(s => [s.lat, s.lng])), { padding: [30, 30], maxZoom: 12 });
-    }
+    if (fit && list.length) map.fitBounds(L.latLngBounds(list.map(s => [s.lat, s.lng])), { padding: [30, 30], maxZoom: 12 });
   }
-
   countEl.textContent = fmt(T.count, { a: list.length, b: TOTAL }) + (userPos ? T.sorted : "");
-  listEl.innerHTML = list.length
-    ? list.map(cardHtml).join("")
-    : `<li class="empty">${esc(T.empty)}</li>`;
+  listEl.innerHTML = list.length ? list.map(cardHtml).join("") : `<li class="empty">${esc(T.empty)}</li>`;
 }
 
 listEl.addEventListener("click", e => {
@@ -434,10 +356,7 @@ listEl.addEventListener("click", e => {
   if (!button) return;
   const spot = SPOTS.find(s => s.id === Number(button.dataset.id));
   if (!spot) return;
-  if (!hasMap) {
-    window.open(mapsUrl(spot), "_blank", "noopener");
-    return;
-  }
+  if (!hasMap) { window.open(mapsUrl(spot), "_blank", "noopener"); return; }
   mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
   map.flyTo([spot.lat, spot.lng], 13, { duration: 0.8 });
   setTimeout(() => markers.get(spot.id).openPopup(), 850);
@@ -446,31 +365,20 @@ listEl.addEventListener("click", e => {
 // ---------- Mano vieta ----------
 let meMarker = null;
 locateBtn.addEventListener("click", () => {
-  if (!("geolocation" in navigator)) {
-    alert(T.noGeo);
-    return;
-  }
+  if (!("geolocation" in navigator)) { alert(T.noGeo); return; }
   locateBtn.disabled = true;
   navigator.geolocation.getCurrentPosition(
     pos => {
       locateBtn.disabled = false;
       userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       if (hasMap) {
-        if (meMarker) {
-          meMarker.setLatLng(userPos);
-        } else {
-          meMarker = L.circleMarker(userPos, { radius: 9, color: "#fff", weight: 3, fillColor: "#1d4ed8", fillOpacity: 1 })
-            .addTo(map)
-            .bindTooltip(T.you);
-        }
+        if (meMarker) meMarker.setLatLng(userPos);
+        else meMarker = L.circleMarker(userPos, { radius: 9, color: "#fff", weight: 3, fillColor: "#1d4ed8", fillOpacity: 1 }).addTo(map).bindTooltip(T.you);
         map.setView(userPos, 9);
       }
       render();
     },
-    err => {
-      locateBtn.disabled = false;
-      alert(err.code === 1 ? T.geoDenied : T.geoFail);
-    },
+    err => { locateBtn.disabled = false; alert(err.code === 1 ? T.geoDenied : T.geoFail); },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
   );
 });
