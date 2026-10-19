@@ -17,8 +17,14 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .top{background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top))}
 .brand{display:flex;align-items:center;gap:12px;max-width:1200px;margin:0 auto}
 .brand img{border-radius:10px}
+.brand-text{flex:1;min-width:0}
 .brand h1{margin:0;font-size:20px;letter-spacing:.3px}
 .brand p{margin:2px 0 0;font-size:13px;opacity:.85}
+.total{display:inline-block;margin-top:4px;background:var(--gold);color:#fff;font-weight:700;font-size:13px;padding:2px 10px;border-radius:999px}
+.lang{display:flex;gap:4px;align-self:flex-start}
+.lang button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 9px;font-weight:700;font-size:13px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
+.lang button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .offline{background:#fff4d6;color:#7a5a00;padding:10px 16px;text-align:center;font-size:14px}
 .controls{position:sticky;top:0;z-index:1000;background:var(--cream);padding:10px 16px 6px;max-width:1200px;margin:0 auto}
 #search{width:100%;font-size:16px;padding:12px 14px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--text)}
@@ -27,12 +33,13 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;border:1px solid #d9d2c3;background:#fff;color:var(--text);padding:8px 14px;border-radius:999px;font-size:14px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.chip .n{opacity:.7;font-size:12px;margin-left:2px}
 .chips.types .chip{font-size:13px;padding:6px 12px}
 .chips.types .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
 .chip:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .layout{max-width:1200px;margin:0 auto;padding:6px 16px 16px}
 #map{position:relative;isolation:isolate;height:45vh;min-height:280px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.08)}
-.count{color:var(--muted);font-size:14px;margin:14px 2px 8px}
+.count{color:var(--text);font-size:15px;font-weight:600;margin:14px 2px 8px}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .card{display:flex;background:#fff;border-radius:var(--radius);box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
 .card-main{flex:1;display:flex;gap:12px;text-align:left;background:none;border:0;padding:14px;font:inherit;color:inherit;cursor:pointer}
@@ -65,168 +72,177 @@ footer a{color:var(--green);font-weight:600}
 <header class="top">
   <div class="brand">
     <img src="icon.svg" alt="" width="36" height="36">
-    <div><h1>FotoVietos LT</h1><p>Gražiausios vietos fotosesijoms Lietuvoje</p></div>
+    <div class="brand-text">
+      <h1>FotoVietos LT</h1>
+      <p id="sub"></p>
+      <span id="total" class="total"></span>
+    </div>
+    <div id="lang" class="lang" role="group"></div>
   </div>
 </header>
 
-<div id="offline" class="offline" role="status" hidden>Nėra interneto. Žemėlapis užsikraus, kai prisijungsite.</div>
+<div id="offline" class="offline" role="status" hidden></div>
 
 <div class="controls">
-  <label class="visually-hidden" for="search">Ieškoti vietos</label>
-  <input id="search" type="search" placeholder="Ieškoti: pilis, parkas, Kaunas, ežeras..." autocomplete="off">
-  <div id="filters" class="chips" role="group" aria-label="Kam tinka vieta"></div>
-  <div id="types" class="chips types" role="group" aria-label="Vietos tipas"></div>
+  <label id="searchLabel" class="visually-hidden" for="search"></label>
+  <input id="search" type="search" autocomplete="off">
+  <div id="filters" class="chips" role="group"></div>
+  <div id="types" class="chips types" role="group"></div>
 </div>
 
 <main class="layout">
-  <div id="map" role="region" aria-label="Žemėlapis"></div>
-  <section aria-label="Vietų sąrašas">
+  <div id="map" role="region"></div>
+  <section id="listSection">
     <p id="count" class="count" aria-live="polite"></p>
     <ul id="list" class="list"></ul>
   </section>
 </main>
 
 <footer>
-  <p>Koordinatės apytikslės. Mygtukas 🧭 atidaro Google Maps ir vietos ieško pagal pavadinimą.
-  Kai kuriose vietose (dvaruose, muziejuose, vienuolynuose) profesionaliai fotosesijai reikia leidimo ar mokesčio, todėl pasitikslinkite iš anksto.</p>
-  <p>Ieškote fotografo? <a href="https://t.me/vestuviu_fotografas_bot" target="_blank" rel="noopener">Parašykite Irmantui Telegram'e</a></p>
+  <p id="note"></p>
+  <p id="bot"></p>
 </footer>
 
-<button id="locate" class="fab" type="button" aria-label="Rodyti mano vietą ir artimiausias vietas">📍</button>
+<button id="locate" class="fab" type="button">📍</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="vietos.js"></script>
 <script>
-// =========================================================
-// VIETOS. Naują vietą pridėk nukopijavęs vieną eilutę ir pakeitęs reikšmes.
-// type: pilis, dvaras, parkas, gamta, griuvesiai, sakralu, kaimas, miestas, pajurys
-// tags: vestuvems, poroms, seimai, portretams, menui
-// id turi būti unikalus skaičius.
-// =========================================================
-const SPOTS = [
-// ---------- Vilnius ir apylinkės ----------
-{id:1,name:"Gedimino pilies bokštas",place:"Vilnius",lat:54.6867,lng:25.2907,type:"pilis",tags:["poroms","portretams"],desc:"Vilniaus simbolis su vaizdu į senamiesčio stogus.",tip:"Saulėlydis virš senamiesčio."},
-{id:2,name:"Vilniaus senamiestis",place:"Vilnius",lat:54.6810,lng:25.2870,type:"miestas",tags:["poroms","portretams","menui"],desc:"Siauros gatvelės, kiemeliai, arkos ir bažnyčios.",tip:"Ankstyvas rytas, kol nėra žmonių."},
-{id:3,name:"Užupis",place:"Vilnius",lat:54.6810,lng:25.2960,type:"miestas",tags:["poroms","menui","portretams"],desc:"Bohemiškas rajonas prie Vilnelės su meno kiemeliais."},
-{id:4,name:"Šv. Onos bažnyčia",place:"Vilnius",lat:54.6828,lng:25.2936,type:"sakralu",tags:["vestuvems","poroms","portretams"],desc:"Gotikos perlas iš raudonų plytų."},
-{id:5,name:"Bernardinų sodas",place:"Vilnius",lat:54.6840,lng:25.2950,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Sodas prie Vilnelės su fontanais ir gėlynais.",tip:"Pavasarį žydi sakuros."},
-{id:6,name:"Trijų kryžių kalnas",place:"Vilnius",lat:54.6865,lng:25.2985,type:"gamta",tags:["poroms","portretams"],desc:"Kalva su panorama į visą Vilnių."},
-{id:7,name:"Vingio parkas",place:"Vilnius",lat:54.6835,lng:25.2385,type:"parkas",tags:["seimai","poroms"],desc:"Didelis miško parkas prie Neries."},
-{id:8,name:"Sapiegų rūmai ir parkas",place:"Vilnius, Antakalnis",lat:54.6960,lng:25.3080,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Baroko rūmai ir senas parkas su takeliais."},
-{id:9,name:"Šv. Petro ir Povilo bažnyčia",place:"Vilnius, Antakalnis",lat:54.6935,lng:25.3075,type:"sakralu",tags:["vestuvems"],desc:"Baltas baroko interjeras su tūkstančiais lipdinių."},
-{id:10,name:"Tuskulėnų dvaro parkas",place:"Vilnius",lat:54.6985,lng:25.2790,type:"parkas",tags:["seimai","portretams"],desc:"Ramus parkas su dvaro pastatais prie Neries."},
-{id:11,name:"Verkių rūmai",place:"Vilnius",lat:54.7588,lng:25.2930,type:"dvaras",tags:["vestuvems","poroms","seimai"],desc:"Klasicistiniai rūmai ir parkas ant Neries šlaito."},
-{id:12,name:"Belmontas",place:"Vilnius, Pavilniai",lat:54.6855,lng:25.3385,type:"gamta",tags:["poroms","seimai"],desc:"Vilnios slėnis, senas malūnas ir krioklys."},
-{id:13,name:"Pūčkorių atodanga",place:"Vilnius, Pavilnių regioninis parkas",lat:54.6800,lng:25.3430,type:"gamta",tags:["poroms","portretams","menui"],desc:"Aukšta atodanga virš Vilnios slėnio.",tip:"Rudenį spalvingi šlaitai."},
-{id:14,name:"Europos parkas",place:"Joneikiškės, Vilniaus raj.",lat:54.9230,lng:25.3220,type:"parkas",tags:["menui","seimai"],desc:"Šiuolaikinių skulptūrų parkas miške."},
-{id:15,name:"Liubavo dvaras",place:"Liubavas, Vilniaus raj.",lat:54.7880,lng:25.1660,type:"dvaras",tags:["vestuvems","poroms","menui"],desc:"Senas dvaras su vandens malūnu ir tvenkiniais."},
-{id:16,name:"Vokės dvaras",place:"Trakų Vokė, Vilnius",lat:54.6350,lng:25.1150,type:"dvaras",tags:["vestuvems","poroms"],desc:"Tiškevičių rūmai ir parkas su kanalais."},
-{id:17,name:"Trakų salos pilis",place:"Trakai",lat:54.6522,lng:24.9335,type:"pilis",tags:["vestuvems","poroms","seimai"],desc:"Gotikinė pilis saloje, Galvės ežero apsuptyje.",tip:"Saulėlydis iš kito kranto. Savaitgaliais daug žmonių."},
-{id:18,name:"Užutrakio dvaras",place:"Trakai",lat:54.6447,lng:24.9540,type:"dvaras",tags:["vestuvems","poroms","portretams"],desc:"Tiškevičių rūmai ir parkas prie Galvės ežero.",tip:"Iš parko matosi Trakų pilis per ežerą."},
-{id:19,name:"Medininkų pilis",place:"Medininkai",lat:54.5397,lng:25.6497,type:"pilis",tags:["vestuvems","portretams","menui"],desc:"Didžiausia aptvarinio tipo pilis Lietuvoje."},
-{id:20,name:"Kernavės piliakalniai",place:"Kernavė",lat:54.8865,lng:24.8510,type:"gamta",tags:["vestuvems","poroms","seimai"],desc:"Penki piliakalniai virš Neries slėnio, UNESCO paveldas.",tip:"Ankstyvą rytą slėnyje dažnai rūkas."},
-{id:21,name:"Dubingių piliakalnis",place:"Dubingiai",lat:55.0610,lng:25.4470,type:"griuvesiai",tags:["poroms","menui"],desc:"Radvilų pilies liekanos ant Asvejos ežero kranto."},
-// ---------- Kaunas ir apylinkės ----------
-{id:22,name:"Kauno pilis",place:"Kaunas",lat:54.8990,lng:23.8853,type:"pilis",tags:["poroms","portretams"],desc:"Seniausia mūrinė pilis Lietuvoje."},
-{id:23,name:"Kauno rotušės aikštė",place:"Kaunas",lat:54.8968,lng:23.8860,type:"miestas",tags:["vestuvems","poroms"],desc:"Baltoji rotušė ir senamiesčio aikštė.",tip:"Tinka iškart po ceremonijos rotušėje."},
-{id:24,name:"Santakos parkas",place:"Kaunas",lat:54.8985,lng:23.8790,type:"parkas",tags:["poroms","seimai"],desc:"Nemuno ir Neries santaka prie pilies.",tip:"Saulėlydis virš upių."},
-{id:25,name:"Kauno botanikos sodas",place:"Kaunas, Aukštoji Fredа",lat:54.8705,lng:23.9105,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Rūmai, tvenkiniai, tiltelis ir oranžerijos.",tip:"Už fotosesiją gali reikėti mokėti."},
-{id:26,name:"Ąžuolyno parkas",place:"Kaunas",lat:54.9000,lng:23.9450,type:"parkas",tags:["seimai","poroms"],desc:"Didžiausias ąžuolų parkas Europos mieste."},
-{id:27,name:"Pažaislio vienuolynas",place:"Kaunas",lat:54.8760,lng:24.0180,type:"sakralu",tags:["vestuvems","portretams","menui"],desc:"Barokinis ansamblis prie Kauno marių.",tip:"Gali reikėti leidimo."},
-{id:28,name:"Raudondvario pilis",place:"Raudondvaris",lat:54.9440,lng:23.7700,type:"pilis",tags:["vestuvems","poroms"],desc:"Renesansinė pilis ir parkas prie Neries."},
-{id:29,name:"Zapyškio Šv. Jono bažnyčia",place:"Zapyškis",lat:54.9075,lng:23.6590,type:"sakralu",tags:["vestuvems","poroms","menui"],desc:"Gotikinė bažnytėlė pievoje prie Nemuno."},
-{id:30,name:"Rumšiškių liaudies buities muziejus",place:"Rumšiškės",lat:54.8850,lng:24.2150,type:"kaimas",tags:["seimai","poroms","menui"],desc:"Senoviniai kaimai, sodybos ir malūnai.",tip:"Dėl fotosesijos pasitikslink muziejuje."},
-{id:31,name:"Birštono apžvalgos bokštas",place:"Birštonas",lat:54.6040,lng:24.0280,type:"gamta",tags:["poroms","seimai"],desc:"Vaizdas į Nemuno kilpas ir pušynus."},
-{id:32,name:"Kėdainių senamiestis",place:"Kėdainiai",lat:55.2880,lng:23.9740,type:"miestas",tags:["poroms","portretams"],desc:"Jaukios aikštės, senos gatvelės ir minaretas."},
-// ---------- Panemunė ----------
-{id:33,name:"Raudonės pilis",place:"Raudonė",lat:55.0950,lng:23.1260,type:"pilis",tags:["vestuvems","poroms"],desc:"Neogotikinė pilis su bokštu ir parku virš Nemuno."},
-{id:34,name:"Panemunės pilis",place:"Vytėnai",lat:55.0790,lng:23.0450,type:"pilis",tags:["vestuvems","poroms","menui"],desc:"Renesansinė pilis su tvenkiniais ir parku."},
-{id:35,name:"Gelgaudiškio dvaras",place:"Gelgaudiškis",lat:55.0800,lng:22.9750,type:"dvaras",tags:["menui","poroms"],desc:"Apleisti rūmai su didžiuliu parku, romantiškai nykus.",tip:"Į pastatus neįeikite."},
-{id:36,name:"Belvederio dvaras",place:"Seredžius",lat:55.0780,lng:23.3900,type:"dvaras",tags:["vestuvems","menui"],desc:"Italų stiliaus rūmai ant kalvos virš Nemuno."},
-{id:37,name:"Jurbarko dvaro parkas",place:"Jurbarkas",lat:55.0770,lng:22.7750,type:"parkas",tags:["seimai","vestuvems"],desc:"Senas parkas su tvenkiniais ir skulptūromis."},
-// ---------- Suvalkija ir Dzūkija ----------
-{id:38,name:"Paežerių dvaras",place:"Paežeriai, Vilkaviškio raj.",lat:54.6370,lng:23.0400,type:"dvaras",tags:["vestuvems","seimai"],desc:"Klasicistiniai rūmai prie ežero."},
-{id:39,name:"Punios šilas",place:"Punia",lat:54.5200,lng:24.0800,type:"gamta",tags:["poroms","menui"],desc:"Senas pušynas, vadinamas Lietuvos džiunglėmis."},
-{id:40,name:"Merkinės piliakalnis",place:"Merkinė",lat:54.1600,lng:24.1870,type:"gamta",tags:["poroms","menui"],desc:"Piliakalnis Merkio ir Nemuno santakoje."},
-{id:41,name:"Liškiavos bažnyčia",place:"Liškiava",lat:54.0840,lng:24.2570,type:"sakralu",tags:["vestuvems","poroms"],desc:"Baroko ansamblis virš Nemuno slėnio."},
-{id:42,name:"Zervynų kaimas",place:"Dzūkijos nacionalinis parkas",lat:54.1360,lng:24.5190,type:"kaimas",tags:["menui","poroms"],desc:"Medinės sodybos prie Ūlos upės.",tip:"Gyvenamas kaimas, gerbkite gyventojus."},
-{id:43,name:"Čepkelių raistas",place:"Marcinkonys",lat:54.0000,lng:24.4700,type:"gamta",tags:["menui"],desc:"Didžiausia Lietuvos pelkė su mistiškais vaizdais.",tip:"Rezervatas, eiti tik leidžiamais takais."},
-{id:44,name:"Druskininkų miesto parkas",place:"Druskininkai",lat:54.0170,lng:23.9720,type:"parkas",tags:["seimai","poroms"],desc:"Parkai prie Nemuno ir Druskonio ežero."},
-{id:45,name:"Grūto parkas",place:"Grūtas, Druskininkų sav.",lat:54.0170,lng:24.0570,type:"parkas",tags:["menui"],desc:"Sovietinių skulptūrų parkas miške."},
-// ---------- Aukštaitija ----------
-{id:46,name:"Ladakalnis",place:"Aukštaitijos nacionalinis parkas",lat:55.4100,lng:26.0450,type:"gamta",tags:["poroms","vestuvems","menui"],desc:"Kalva su vaizdu į kelis ežerus.",tip:"Saulėtekis su rūku."},
-{id:47,name:"Ginučių vandens malūnas",place:"Ginučiai",lat:55.4240,lng:26.0560,type:"kaimas",tags:["poroms","seimai","menui"],desc:"Senas vandens malūnas prie upelio."},
-{id:48,name:"Palūšės bažnyčia",place:"Palūšė",lat:55.3330,lng:26.1040,type:"sakralu",tags:["vestuvems","menui"],desc:"Medinė bažnyčia ir varpinė prie Lūšių ežero."},
-{id:49,name:"Taurapilio piliakalnis",place:"Tauragnai",lat:55.4560,lng:25.8350,type:"gamta",tags:["poroms","menui"],desc:"Piliakalnis prie giliausio Lietuvos ežero Tauragno."},
-{id:50,name:"Anykščių lajų takas",place:"Anykščiai",lat:55.4930,lng:25.0990,type:"gamta",tags:["seimai","poroms"],desc:"Takas virš medžių lajų ir apžvalgos bokštas."},
-{id:51,name:"Puntuko akmuo",place:"Anykščių šilelis",lat:55.4870,lng:25.0840,type:"gamta",tags:["seimai","menui"],desc:"Didelis riedulys pušyne prie Šventosios."},
-{id:52,name:"Raguvėlės dvaras",place:"Raguvėlė, Anykščių raj.",lat:55.6220,lng:24.7520,type:"dvaras",tags:["vestuvems","poroms","menui"],desc:"Senas dvaras su parku ir romantiška atmosfera."},
-{id:53,name:"Taujėnų dvaras",place:"Taujėnai, Ukmergės raj.",lat:55.3950,lng:24.7000,type:"dvaras",tags:["vestuvems","poroms"],desc:"Radvilų rūmai ir parkas."},
-{id:54,name:"Rokiškio dvaras",place:"Rokiškis",lat:55.9530,lng:25.5770,type:"dvaras",tags:["vestuvems","seimai"],desc:"Tyzenhauzų dvaras su parku ir tvenkiniu."},
-{id:55,name:"Stelmužės ąžuolas",place:"Stelmužė, Zarasų raj.",lat:55.8330,lng:26.2000,type:"gamta",tags:["seimai","menui"],desc:"Seniausias Lietuvos ąžuolas ir medinė bažnyčia."},
-{id:56,name:"Zarasų Didžioji sala",place:"Zarasai",lat:55.7280,lng:26.2470,type:"parkas",tags:["poroms","seimai"],desc:"Sala su parku, apžvalgos ratu ir ežerų vaizdais."},
-{id:57,name:"Biržų pilis",place:"Biržai",lat:56.2030,lng:24.7530,type:"pilis",tags:["vestuvems","seimai"],desc:"Bastioninė tvirtovė prie Širvėnos ežero."},
-{id:58,name:"Kirkilų apžvalgos bokštas",place:"Kirkilai, Biržų raj.",lat:56.2440,lng:24.8000,type:"gamta",tags:["poroms","menui"],desc:"Karstinių įgriuvų ežerėliai ir bokštas virš jų."},
-{id:59,name:"Pakruojo dvaras",place:"Pakruojis",lat:55.9790,lng:23.8600,type:"dvaras",tags:["vestuvems","poroms"],desc:"Vienas didžiausių dvarų su tiltais ir parku."},
-// ---------- Panevėžys ----------
-{id:60,name:"Skaistakalnio parkas",place:"Panevėžys",lat:55.7338,lng:24.3761,type:"parkas",tags:["seimai","portretams","vestuvems"],desc:"Ramus parkas su žaluma prie Nevėžio."},
-{id:61,name:"Senvagė",place:"Panevėžys",lat:55.7311,lng:24.3627,type:"miestas",tags:["vestuvems","poroms"],desc:"Romantiška vieta prie vandens, vakare fontanai."},
-{id:62,name:"Bistrampolio dvaras",place:"Bistrampolis, Panevėžio raj.",lat:55.6500,lng:24.3300,type:"dvaras",tags:["vestuvems","poroms"],desc:"Rūmai, parkas ir tvenkiniai netoli Panevėžio."},
-{id:63,name:"Krekenavos bazilika",place:"Krekenava",lat:55.5390,lng:24.0940,type:"sakralu",tags:["vestuvems"],desc:"Didinga bazilika prie Nevėžio."},
-// ---------- Šiaurės ir Vidurio Lietuva ----------
-{id:64,name:"Kryžių kalnas",place:"Jurgaičiai, Šiaulių raj.",lat:56.0153,lng:23.4167,type:"sakralu",tags:["menui"],desc:"Tūkstančiai kryžių ant piliakalnio.",tip:"Maldos vieta, fotografuokite pagarbiai."},
-{id:65,name:"Talšos ežero pakrantė",place:"Šiauliai",lat:55.9310,lng:23.3060,type:"parkas",tags:["poroms","seimai"],desc:"Promenada ir parkas prie ežero."},
-{id:66,name:"Chaimo Frenkelio vila",place:"Šiauliai",lat:55.9260,lng:23.3420,type:"dvaras",tags:["vestuvems","portretams"],desc:"Moderno stiliaus vila su parku."},
-{id:67,name:"Burbiškio dvaras",place:"Burbiškis, Radviliškio raj.",lat:55.7520,lng:23.6530,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai, tvenkiniai ir tulpių žydėjimas pavasarį."},
-{id:68,name:"Kurtuvėnų dvaras",place:"Kurtuvėnai, Šiaulių raj.",lat:55.8250,lng:23.0500,type:"dvaras",tags:["poroms","seimai"],desc:"Dvaro sodyba regioniniame parke."},
-{id:69,name:"Žagarės dvaras",place:"Žagarė",lat:56.3600,lng:23.2450,type:"dvaras",tags:["poroms","menui"],desc:"Rūmai ir didelis parkas prie Švėtės."},
-{id:70,name:"Tytuvėnų vienuolynas",place:"Tytuvėnai",lat:55.6000,lng:23.2000,type:"sakralu",tags:["vestuvems","menui"],desc:"Renesanso ansamblis su arkadiniu kiemu."},
-{id:71,name:"Kelmės dvaras",place:"Kelmė",lat:55.6320,lng:22.9350,type:"dvaras",tags:["seimai"],desc:"Senas dvaras ir parkas prie Kražantės."},
-// ---------- Žemaitija ----------
-{id:72,name:"Šatrijos kalnas",place:"Luokė, Telšių raj.",lat:55.9370,lng:22.4200,type:"gamta",tags:["poroms","menui"],desc:"Legendų apipintas kalnas su plačia panorama."},
-{id:73,name:"Masčio ežero pakrantė",place:"Telšiai",lat:55.9870,lng:22.2470,type:"parkas",tags:["poroms","seimai"],desc:"Promenada ir amfiteatras prie ežero."},
-{id:74,name:"Plungės Oginskių dvaras",place:"Plungė",lat:55.9110,lng:21.8530,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai ir didelis parkas su tvenkiniais."},
-{id:75,name:"Platelių ežeras",place:"Žemaitijos nacionalinis parkas",lat:56.0450,lng:21.8450,type:"gamta",tags:["poroms","seimai"],desc:"Didelis ežeras su salomis ir pakrantės takais."},
-{id:76,name:"Žemaičių Kalvarija",place:"Žemaičių Kalvarija",lat:56.1200,lng:21.8800,type:"sakralu",tags:["menui"],desc:"Bazilika ir Kryžiaus kelio koplyčios kalvose."},
-{id:77,name:"Orvidų sodyba",place:"Salantai",lat:56.0080,lng:21.6070,type:"kaimas",tags:["menui"],desc:"Neįprasta sodyba su akmenimis ir skulptūromis."},
-{id:78,name:"Renavo dvaras",place:"Renavas, Mažeikių raj.",lat:56.2430,lng:22.0580,type:"dvaras",tags:["vestuvems","poroms"],desc:"Neobaroko rūmai ir parkas prie Ventos."},
-{id:79,name:"Švėkšnos dvaras",place:"Švėkšna",lat:55.5200,lng:21.6180,type:"dvaras",tags:["vestuvems","seimai"],desc:"Parkas, tvenkinys ir neogotikinė bažnyčia šalia."},
-// ---------- Pajūris ----------
-{id:80,name:"Kretingos dvaras ir žiemos sodas",place:"Kretinga",lat:55.8880,lng:21.2440,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai su žiemos sodu ir parku.",tip:"Žiemos sodas tinka ir lyjant."},
-{id:81,name:"Palangos tiltas",place:"Palanga",lat:55.9196,lng:21.0473,type:"pajurys",tags:["poroms","vestuvems"],desc:"Ilgas tiltas į jūrą.",tip:"Saulėlydis virš jūros."},
-{id:82,name:"Palangos botanikos parkas",place:"Palanga",lat:55.9050,lng:21.0620,type:"parkas",tags:["vestuvems","seimai"],desc:"Tiškevičių rūmai, parkas ir Birutės kalnas."},
-{id:83,name:"Olando kepurė",place:"Karklė",lat:55.8320,lng:21.0700,type:"pajurys",tags:["poroms","vestuvems","menui"],desc:"Aukštas skardis virš jūros.",tip:"Saulėlydis."},
-{id:84,name:"Klaipėdos senamiestis",place:"Klaipėda",lat:55.7090,lng:21.1310,type:"miestas",tags:["poroms","portretams"],desc:"Fachverkiniai namai, kiemeliai ir Danės krantinė."},
-{id:85,name:"Smiltynė, Kopgalis",place:"Klaipėda",lat:55.7200,lng:21.0950,type:"pajurys",tags:["poroms","seimai"],desc:"Pliažas, kopos ir molas Kuršių nerijos pradžioje."},
-{id:86,name:"Raganų kalnas",place:"Juodkrantė",lat:55.5480,lng:21.1210,type:"gamta",tags:["seimai","menui"],desc:"Medinės skulptūros pušyne."},
-{id:87,name:"Parnidžio kopa",place:"Nida",lat:55.2990,lng:21.0060,type:"pajurys",tags:["vestuvems","poroms","menui"],desc:"Aukšta kopa su vaizdu į marias.",tip:"Saulėlydis. Nuo takų nenukrypkite."},
-{id:88,name:"Ventės ragas",place:"Ventė",lat:55.3420,lng:21.1900,type:"pajurys",tags:["poroms","menui"],desc:"Švyturys ir marių pakrantė."},
-{id:89,name:"Mingės kaimas",place:"Minija, Šilutės raj.",lat:55.3340,lng:21.2950,type:"kaimas",tags:["menui","poroms"],desc:"Kaimas abipus Minijos upės, Lietuvos Venecija."}
-];
+// ---------- Vertimai ----------
+const I18N = {
+  lt: {
+    sub: "Gražiausios vietos fotosesijoms Lietuvoje",
+    total: "Iš viso vietų: {n}",
+    offline: "Nėra interneto. Žemėlapis užsikraus, kai prisijungsite.",
+    search: "Ieškoti: parkas, pilis, Panevėžys, ežeras...",
+    searchLabel: "Ieškoti vietos",
+    tagsAria: "Kam tinka vieta",
+    typesAria: "Vietos tipas",
+    mapAria: "Žemėlapis",
+    listAria: "Vietų sąrašas",
+    allTags: "Visos",
+    allTypes: "Visi tipai",
+    count: "Rodoma {a} iš {b} vietų",
+    sorted: " · surikiuota pagal atstumą",
+    empty: "Nieko nerasta. Pabandykite kitą žodį arba pasirinkite „Visos“ ir „Visi tipai“.",
+    showOnMap: "Rodyti žemėlapyje",
+    openMaps: "Atidaryti Google Maps",
+    layerMap: "Žemėlapis",
+    layerSat: "Palydovas",
+    you: "Jūs čia",
+    locate: "Rodyti mano vietą ir artimiausias vietas",
+    noGeo: "Šis įrenginys neleidžia nustatyti vietos.",
+    geoDenied: "Leiskite programėlei naudoti vietą (telefono nustatymuose) ir bandykite dar kartą.",
+    geoFail: "Nepavyko nustatyti vietos. Įsijunkite GPS ir bandykite dar kartą.",
+    note: "Koordinatės apytikslės. Mygtukas 🧭 atidaro Google Maps ir vietos ieško pagal pavadinimą. Dvaruose, muziejuose ir vienuolynuose profesionaliai fotosesijai gali reikėti leidimo ar mokesčio.",
+    botAsk: "Ieškote fotografo?",
+    botLink: "Parašykite Irmantui Telegram'e",
+    langAria: "Kalba"
+  },
+  en: {
+    sub: "The most beautiful photo shoot locations in Lithuania",
+    total: "Total places: {n}",
+    offline: "No internet. The map will load when you are back online.",
+    search: "Search: park, castle, Vilnius, lake...",
+    searchLabel: "Search for a place",
+    tagsAria: "What the place suits",
+    typesAria: "Place type",
+    mapAria: "Map",
+    listAria: "List of places",
+    allTags: "All",
+    allTypes: "All types",
+    count: "Showing {a} of {b} places",
+    sorted: " · sorted by distance",
+    empty: "Nothing found. Try another word or choose “All” and “All types”.",
+    showOnMap: "Show on map",
+    openMaps: "Open in Google Maps",
+    layerMap: "Map",
+    layerSat: "Satellite",
+    you: "You are here",
+    locate: "Show my location and the nearest places",
+    noGeo: "This device cannot determine location.",
+    geoDenied: "Allow the app to use your location (in phone settings) and try again.",
+    geoFail: "Could not determine your location. Turn on GPS and try again.",
+    note: "Coordinates are approximate. The 🧭 button opens Google Maps and searches by name. Manors, museums and monasteries may require a permit or fee for professional shoots.",
+    botAsk: "Looking for a photographer?",
+    botLink: "Message Irmantas on Telegram",
+    langAria: "Language"
+  },
+  ru: {
+    sub: "Лучшие места для фотосессий в Литве",
+    total: "Всего мест: {n}",
+    offline: "Нет интернета. Карта загрузится, когда появится связь.",
+    search: "Поиск: парк, замок, Вильнюс, озеро...",
+    searchLabel: "Поиск места",
+    tagsAria: "Для чего подходит место",
+    typesAria: "Тип места",
+    mapAria: "Карта",
+    listAria: "Список мест",
+    allTags: "Все",
+    allTypes: "Все типы",
+    count: "Показано {a} из {b} мест",
+    sorted: " · по расстоянию",
+    empty: "Ничего не найдено. Попробуйте другое слово или выберите «Все» и «Все типы».",
+    showOnMap: "Показать на карте",
+    openMaps: "Открыть в Google Maps",
+    layerMap: "Карта",
+    layerSat: "Спутник",
+    you: "Вы здесь",
+    locate: "Показать моё местоположение и ближайшие места",
+    noGeo: "Это устройство не может определить местоположение.",
+    geoDenied: "Разрешите приложению доступ к местоположению (в настройках телефона) и попробуйте снова.",
+    geoFail: "Не удалось определить местоположение. Включите GPS и попробуйте снова.",
+    note: "Координаты примерные. Кнопка 🧭 открывает Google Maps и ищет по названию. В усадьбах, музеях и монастырях для профессиональной съёмки может понадобиться разрешение или плата.",
+    botAsk: "Ищете фотографа?",
+    botLink: "Напишите Ирмантасу в Telegram",
+    langAria: "Язык"
+  }
+};
 
 const TYPES = {
-  pilis:{label:"Pilis",plural:"Pilys",icon:"🏰"},
-  dvaras:{label:"Dvaras, rūmai",plural:"Dvarai",icon:"🏛️"},
-  parkas:{label:"Parkas",plural:"Parkai",icon:"🌳"},
-  gamta:{label:"Gamta",plural:"Gamta",icon:"🌲"},
-  griuvesiai:{label:"Griuvėsiai",plural:"Griuvėsiai",icon:"🧱"},
-  sakralu:{label:"Bažnyčia, vienuolynas",plural:"Bažnyčios",icon:"⛪"},
-  kaimas:{label:"Senovinis kaimas",plural:"Kaimai",icon:"🏡"},
-  miestas:{label:"Miestas",plural:"Miestai",icon:"🏙️"},
-  pajurys:{label:"Pajūris",plural:"Pajūris",icon:"🌊"}
+  pilis:      { icon: "🏰", label: ["Pilis", "Castle", "Замок"], plural: ["Pilys", "Castles", "Замки"] },
+  dvaras:     { icon: "🏛️", label: ["Dvaras, rūmai", "Manor, palace", "Усадьба, дворец"], plural: ["Dvarai", "Manors", "Усадьбы"] },
+  parkas:     { icon: "🌳", label: ["Parkas", "Park", "Парк"], plural: ["Parkai", "Parks", "Парки"] },
+  gamta:      { icon: "🌲", label: ["Gamta", "Nature", "Природа"], plural: ["Gamta", "Nature", "Природа"] },
+  griuvesiai: { icon: "🧱", label: ["Griuvėsiai", "Ruins", "Руины"], plural: ["Griuvėsiai", "Ruins", "Руины"] },
+  sakralu:    { icon: "⛪", label: ["Bažnyčia, vienuolynas", "Church, monastery", "Храм, монастырь"], plural: ["Bažnyčios", "Churches", "Храмы"] },
+  kaimas:     { icon: "🏡", label: ["Senovinis kaimas", "Old village", "Старинная деревня"], plural: ["Kaimai", "Villages", "Деревни"] },
+  miestas:    { icon: "🏙️", label: ["Miestas", "Town", "Город"], plural: ["Miestai", "Towns", "Города"] },
+  pajurys:    { icon: "🌊", label: ["Pajūris", "Seaside", "Побережье"], plural: ["Pajūris", "Seaside", "Побережье"] },
+  retro:      { icon: "🚂", label: ["Retro vieta", "Retro spot", "Ретро-место"], plural: ["Retro", "Retro", "Ретро"] }
 };
 const TAGS = {
-  vestuvems:{label:"Vestuvėms",color:"#c2255c",bg:"#fde2ec"},
-  poroms:{label:"Poroms",color:"#c2410c",bg:"#ffedd5"},
-  seimai:{label:"Šeimai",color:"#2b7a3d",bg:"#dcfce7"},
-  portretams:{label:"Portretams",color:"#1d4ed8",bg:"#dbeafe"},
-  menui:{label:"Meninėms",color:"#6d28d9",bg:"#ede9fe"}
+  vestuvems:      { label: ["Vestuvėms", "Weddings", "Свадьбы"], color: "#c2255c", bg: "#fde2ec" },
+  poroms:         { label: ["Poroms", "Couples", "Пары"], color: "#c2410c", bg: "#ffedd5" },
+  seimai:         { label: ["Šeimai", "Family", "Семья"], color: "#2b7a3d", bg: "#dcfce7" },
+  portretams:     { label: ["Portretams", "Portraits", "Портреты"], color: "#1d4ed8", bg: "#dbeafe" },
+  menui:          { label: ["Meninėms", "Artistic", "Арт"], color: "#6d28d9", bg: "#ede9fe" },
+  pasivaikscioti: { label: ["Pasivaikščiojimui", "Walks", "Прогулки"], color: "#0f766e", bg: "#ccfbf1" }
 };
 
+// ---------- Kalba ----------
+const LANGS = ["lt", "en", "ru"];
+let savedLang = null;
+try { savedLang = localStorage.getItem("lang"); } catch (e) {}
+const LANG = LANGS.includes(savedLang)
+  ? savedLang
+  : ((navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "lt");
+const LI = LANGS.indexOf(LANG);
+const T = I18N[LANG];
+document.documentElement.lang = LANG;
+
 // ---------- Pagalbinės ----------
+const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const typeOf = s => TYPES[s.type] || TYPES.gamta;
-const mapsUrl = s => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${s.name}, ${s.place}`);
+const tr = v => Array.isArray(v) ? (v[LI] || v[0] || "") : String(v || "");
+const allText = v => Array.isArray(v) ? v.join(" ") : String(v || "");
+const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+const typeOf = s => TYPES[s.t] || TYPES.gamta;
+const mapsUrl = s => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${s.n}, ${s.p}`);
+
+const SPOTS = Array.isArray(window.SPOTS) ? window.SPOTS : [];
+const TOTAL = SPOTS.length;
 
 function distanceKm(a, b) {
   const R = 6371, rad = x => x * Math.PI / 180;
@@ -235,19 +251,51 @@ function distanceKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+// Paieška veikia visomis kalbomis
+const SEARCH_TEXT = new Map(SPOTS.map(s => {
+  const t = typeOf(s);
+  return [s.id, norm([s.n, s.p, allText(s.d), allText(s.tip), allText(t.label), allText(t.plural),
+    ...(s.g || []).map(k => allText(TAGS[k]?.label))].join(" "))];
+}));
+
+// ---------- Tekstai puslapyje ----------
+$("sub").textContent = T.sub;
+$("total").textContent = fmt(T.total, { n: TOTAL });
+$("offline").textContent = T.offline;
+$("search").placeholder = T.search;
+$("searchLabel").textContent = T.searchLabel;
+$("filters").setAttribute("aria-label", T.tagsAria);
+$("types").setAttribute("aria-label", T.typesAria);
+$("map").setAttribute("aria-label", T.mapAria);
+$("listSection").setAttribute("aria-label", T.listAria);
+$("note").textContent = T.note;
+$("bot").innerHTML = `${esc(T.botAsk)} <a href="https://t.me/vestuviu_fotografas_bot" target="_blank" rel="noopener">${esc(T.botLink)}</a>`;
+$("locate").setAttribute("aria-label", T.locate);
+
+const langEl = $("lang");
+langEl.setAttribute("aria-label", T.langAria);
+langEl.innerHTML = LANGS
+  .map(l => `<button type="button" data-lang="${l}" aria-pressed="${l === LANG}">${l.toUpperCase()}</button>`)
+  .join("");
+langEl.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.dataset.lang === LANG) return;
+  try { localStorage.setItem("lang", b.dataset.lang); } catch (err) {}
+  location.reload();
+});
+
 // ---------- Būsena ----------
 let activeTag = "all";
 let activeType = "all";
 let query = "";
 let userPos = null;
 
-const listEl = document.getElementById("list");
-const countEl = document.getElementById("count");
-const mapEl = document.getElementById("map");
-const offlineEl = document.getElementById("offline");
-const locateBtn = document.getElementById("locate");
+const listEl = $("list");
+const countEl = $("count");
+const mapEl = $("map");
+const offlineEl = $("offline");
+const locateBtn = $("locate");
 
-// ---------- Interneto būsena ----------
 function updateOnline() { offlineEl.hidden = navigator.onLine; }
 window.addEventListener("online", updateOnline);
 window.addEventListener("offline", updateOnline);
@@ -261,38 +309,33 @@ const markers = new Map();
 
 function popupHtml(s) {
   const t = typeOf(s);
-  return `<div class="pop"><strong>${esc(s.name)}</strong>
-    <div class="muted">${t.icon} ${esc(t.label)} · ${esc(s.place)}</div>
-    <p>${esc(s.desc)}</p>
-    ${s.tip ? `<p class="tip">💡 ${esc(s.tip)}</p>` : ""}
-    <a class="btn" href="${mapsUrl(s)}" target="_blank" rel="noopener">Atidaryti Google Maps</a></div>`;
+  const tip = tr(s.tip);
+  return `<div class="pop"><strong>${esc(s.n)}</strong>
+    <div class="muted">${t.icon} ${esc(tr(t.label))} · ${esc(s.p)}</div>
+    <p>${esc(tr(s.d))}</p>
+    ${tip ? `<p class="tip">💡 ${esc(tip)}</p>` : ""}
+    <a class="btn" href="${mapsUrl(s)}" target="_blank" rel="noopener">${esc(T.openMaps)}</a></div>`;
 }
 
 if (hasMap) {
   map = L.map("map").setView([55.2, 23.9], 7);
-
   const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap"
+    maxZoom: 19, attribution: "&copy; OpenStreetMap"
   });
   const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 19,
-    attribution: "Tiles &copy; Esri"
+    maxZoom: 19, attribution: "Tiles &copy; Esri"
   });
   osm.addTo(map);
-  L.control.layers({ "Žemėlapis": osm, "Palydovas": sat }).addTo(map);
-
+  L.control.layers({ [T.layerMap]: osm, [T.layerSat]: sat }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
 
   SPOTS.forEach(s => {
     const icon = L.divIcon({
       className: "pin",
       html: `<span aria-hidden="true">${typeOf(s).icon}</span>`,
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
-      popupAnchor: [0, -16]
+      iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -16]
     });
-    const marker = L.marker([s.lat, s.lng], { icon, title: s.name });
+    const marker = L.marker([s.lat, s.lng], { icon, title: s.n });
     marker.bindPopup(popupHtml(s));
     markers.set(s.id, marker);
   });
@@ -303,7 +346,7 @@ if (hasMap) {
 // ---------- Filtrai ----------
 function setupChips(el, defs, onPick) {
   el.innerHTML = defs
-    .map(([key, label]) => `<button type="button" class="chip" data-key="${key}" aria-pressed="${key === "all"}">${esc(label)}</button>`)
+    .map(([key, label, n]) => `<button type="button" class="chip" data-key="${key}" aria-pressed="${key === "all"}">${esc(label)} <span class="n">(${n})</span></button>`)
     .join("");
   el.addEventListener("click", e => {
     const chip = e.target.closest(".chip");
@@ -315,20 +358,20 @@ function setupChips(el, defs, onPick) {
 }
 
 setupChips(
-  document.getElementById("filters"),
-  [["all", "Visos"], ...Object.entries(TAGS).map(([k, v]) => [k, v.label])],
+  $("filters"),
+  [["all", T.allTags, TOTAL], ...Object.entries(TAGS).map(([k, v]) => [k, tr(v.label), SPOTS.filter(s => (s.g || []).includes(k)).length])],
   key => { activeTag = key; }
 );
 
-const usedTypes = Object.keys(TYPES).filter(k => SPOTS.some(s => s.type === k));
+const usedTypes = Object.keys(TYPES).filter(k => SPOTS.some(s => s.t === k));
 setupChips(
-  document.getElementById("types"),
-  [["all", "Visi tipai"], ...usedTypes.map(k => [k, `${TYPES[k].icon} ${TYPES[k].plural}`])],
+  $("types"),
+  [["all", T.allTypes, TOTAL], ...usedTypes.map(k => [k, `${TYPES[k].icon} ${tr(TYPES[k].plural)}`, SPOTS.filter(s => s.t === k).length])],
   key => { activeType = key; }
 );
 
 let searchTimer = null;
-document.getElementById("search").addEventListener("input", e => {
+$("search").addEventListener("input", e => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     query = norm(e.target.value).trim();
@@ -338,38 +381,36 @@ document.getElementById("search").addEventListener("input", e => {
 
 // ---------- Sąrašas ----------
 function matches(s) {
-  if (activeTag !== "all" && !s.tags.includes(activeTag)) return false;
-  if (activeType !== "all" && s.type !== activeType) return false;
+  if (activeTag !== "all" && !(s.g || []).includes(activeTag)) return false;
+  if (activeType !== "all" && s.t !== activeType) return false;
   if (!query) return true;
-  const t = typeOf(s);
-  const haystack = norm([s.name, s.place, s.desc, s.tip, t.label, t.plural, ...s.tags.map(k => TAGS[k]?.label || k)].join(" "));
-  return query.split(/\s+/).every(word => haystack.includes(word));
+  const text = SEARCH_TEXT.get(s.id) || "";
+  return query.split(/\s+/).every(word => text.includes(word));
 }
 
 function cardHtml(s) {
   const t = typeOf(s);
   const dist = s.dist != null ? ` · ${s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)} km` : "";
-  const tags = s.tags
+  const tags = (s.g || [])
     .filter(k => TAGS[k])
-    .map(k => `<span class="tag" style="color:${TAGS[k].color};background:${TAGS[k].bg}">${esc(TAGS[k].label)}</span>`)
+    .map(k => `<span class="tag" style="color:${TAGS[k].color};background:${TAGS[k].bg}">${esc(tr(TAGS[k].label))}</span>`)
     .join("");
   return `<li><article class="card">
-    <button type="button" class="card-main" data-id="${s.id}" aria-label="Rodyti žemėlapyje: ${esc(s.name)}">
+    <button type="button" class="card-main" data-id="${s.id}" aria-label="${esc(T.showOnMap)}: ${esc(s.n)}">
       <span class="card-icon" aria-hidden="true">${t.icon}</span>
       <span class="card-body">
-        <span class="card-title">${esc(s.name)}</span>
-        <span class="muted">${esc(t.label)} · ${esc(s.place)}${dist}</span>
-        <span class="card-desc">${esc(s.desc)}</span>
+        <span class="card-title">${esc(s.n)}</span>
+        <span class="muted">${esc(tr(t.label))} · ${esc(s.p)}${dist}</span>
+        <span class="card-desc">${esc(tr(s.d))}</span>
         <span class="tags">${tags}</span>
       </span>
     </button>
-    <a class="card-nav" href="${mapsUrl(s)}" target="_blank" rel="noopener" aria-label="Atidaryti Google Maps: ${esc(s.name)}">🧭</a>
+    <a class="card-nav" href="${mapsUrl(s)}" target="_blank" rel="noopener" aria-label="${esc(T.openMaps)}: ${esc(s.n)}">🧭</a>
   </article></li>`;
 }
 
 function render({ fit = false } = {}) {
   let list = SPOTS.filter(matches);
-
   if (userPos) {
     list = list.map(s => ({ ...s, dist: distanceKm(userPos, s) })).sort((a, b) => a.dist - b.dist);
   }
@@ -382,12 +423,10 @@ function render({ fit = false } = {}) {
     }
   }
 
-  countEl.textContent = list.length
-    ? `Rasta vietų: ${list.length}${userPos ? " · surikiuota pagal atstumą" : ""}`
-    : "";
+  countEl.textContent = fmt(T.count, { a: list.length, b: TOTAL }) + (userPos ? T.sorted : "");
   listEl.innerHTML = list.length
     ? list.map(cardHtml).join("")
-    : `<li class="empty">Nieko nerasta. Pabandykite kitą žodį arba pasirinkite „Visos“ ir „Visi tipai“.</li>`;
+    : `<li class="empty">${esc(T.empty)}</li>`;
 }
 
 listEl.addEventListener("click", e => {
@@ -395,12 +434,10 @@ listEl.addEventListener("click", e => {
   if (!button) return;
   const spot = SPOTS.find(s => s.id === Number(button.dataset.id));
   if (!spot) return;
-
   if (!hasMap) {
     window.open(mapsUrl(spot), "_blank", "noopener");
     return;
   }
-
   mapEl.scrollIntoView({ behavior: "smooth", block: "start" });
   map.flyTo([spot.lat, spot.lng], 13, { duration: 0.8 });
   setTimeout(() => markers.get(spot.id).openPopup(), 850);
@@ -410,23 +447,21 @@ listEl.addEventListener("click", e => {
 let meMarker = null;
 locateBtn.addEventListener("click", () => {
   if (!("geolocation" in navigator)) {
-    alert("Šis įrenginys neleidžia nustatyti vietos.");
+    alert(T.noGeo);
     return;
   }
   locateBtn.disabled = true;
-
   navigator.geolocation.getCurrentPosition(
     pos => {
       locateBtn.disabled = false;
       userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-
       if (hasMap) {
         if (meMarker) {
           meMarker.setLatLng(userPos);
         } else {
           meMarker = L.circleMarker(userPos, { radius: 9, color: "#fff", weight: 3, fillColor: "#1d4ed8", fillOpacity: 1 })
             .addTo(map)
-            .bindTooltip("Jūs čia");
+            .bindTooltip(T.you);
         }
         map.setView(userPos, 9);
       }
@@ -434,9 +469,7 @@ locateBtn.addEventListener("click", () => {
     },
     err => {
       locateBtn.disabled = false;
-      alert(err.code === 1
-        ? "Leiskite programėlei naudoti vietą (telefono nustatymuose) ir bandykite dar kartą."
-        : "Nepavyko nustatyti vietos. Įsijunkite GPS ir bandykite dar kartą.");
+      alert(err.code === 1 ? T.geoDenied : T.geoFail);
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
   );
@@ -444,7 +477,6 @@ locateBtn.addEventListener("click", () => {
 
 render({ fit: true });
 
-// ---------- Programėlės režimas ----------
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
