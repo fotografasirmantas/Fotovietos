@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vietų tikrinimas</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#f5f1e8;color:#1f2a27}
+header{background:#1a3c34;color:#fff;padding:12px 16px}
+header h1{margin:0;font-size:18px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;align-items:center}
+button{font:inherit;padding:9px 14px;border-radius:10px;border:1px solid #d9d2c3;background:#fff;cursor:pointer}
+button.main{background:#1a3c34;color:#fff;border-color:#1a3c34}
+button:disabled{opacity:.5}
+#status{font-weight:600}
+.wrap{display:grid;grid-template-columns:1fr;gap:12px;padding:0 16px 16px}
+#map{height:50vh;border-radius:14px}
+@media(min-width:900px){.wrap{grid-template-columns:1.2fr 1fr}#map{height:calc(100vh - 130px);position:sticky;top:10px}}
+.panel{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px}
+.panel h2{margin:0 0 4px;font-size:17px}
+.panel input{width:100%;box-sizing:border-box;font-size:16px;padding:9px;border:1px solid #d9d2c3;border-radius:8px;margin:6px 0}
+.panel .btns{display:flex;flex-wrap:wrap;gap:6px}
+.panel a{color:#1a3c34;font-weight:600}
+#list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.row{background:#fff;border-radius:10px;padding:8px 10px;border-left:6px solid #ccc;cursor:pointer}
+.row.ok{border-color:#2b7a3d}.row.warn{border-color:#d4a017}.row.bad{border-color:#c2255c}
+.row.done{opacity:.55}.row.removed{text-decoration:line-through;opacity:.4}
+.row.active{outline:3px solid #c9973f}
+.row small{color:#5b6b66}
+.legend{font-size:13px;color:#5b6b66;padding:0 16px}
+</style>
+</head>
+<body>
+<header><h1>Vietų tikrinimas</h1></header>
+<div class="bar">
+  <button id="start" class="main" type="button">1. Pradėti tikrinimą</button>
+  <button id="stop" type="button" disabled>Sustabdyti</button>
+  <button id="onlyBad" type="button" aria-pressed="false">Rodyti tik geltonas ir raudonas</button>
+  <button id="download" class="main" type="button">3. Atsisiųsti vietos.js</button>
+  <span id="status" aria-live="polite"></span>
+</div>
+<p class="legend">🟢 tikslu · 🟡 verta pažiūrėti (0,5–2 km) · 🔴 toli arba nerasta · pilkas taškas – sena vieta · mėlynas – rasta OpenStreetMap · smeigtukas – galutinė vieta (galima tempti)</p>
+<div class="wrap">
+  <div id="map"></div>
+  <div>
+    <div id="panel" class="panel">Paspauskite „Pradėti tikrinimą“, tada spauskite ant vietų sąraše.</div>
+    <ul id="list"></ul>
+  </div>
+</div>
+<p class="legend">Paieška: © OpenStreetMap / Nominatim</p>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="vietos.js?v=check"></script>
+<script>
+const SPOTS = Array.isArray(window.SPOTS) ? window.SPOTS : [];
+const KEY = "fotovietos-fix-v1";
+let fix = {};
+try { fix = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(fix)); } catch (e) {} };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const inLT = (lat, lng) => lat > 53.8 && lat < 56.5 && lng > 20.9 && lng < 26.9;
+
+function distKm(a, b) {
+  const R = 6371, rad = x => x * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function finalPos(s) {
+  const f = fix[s.id];
+  return f && f.lat != null ? { lat: f.lat, lng: f.lng } : { lat: s.lat, lng: s.lng };
+}
+
+function level(s) {
+  const f = fix[s.id];
+  if (!f || !f.checked) return "";
+  if (!f.cand) return "bad";
+  const d = distKm(s, f.cand);
+  if (d > 2) return "bad";
+  if (d > 0.5) return "warn";
+  return "ok";
+}
+
+// ---------- Žemėlapis ----------
+const map = L.map("map").setView([55.2, 23.9], 7);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(map);
+const oldMark = L.circleMarker([0, 0], { radius: 8, color: "#666", fillColor: "#999", fillOpacity: .8 });
+const candMark = L.circleMarker([0, 0], { radius: 8, color: "#1d4ed8", fillColor: "#3b82f6", fillOpacity: .8 });
+const finalMark = L.marker([0, 0], { draggable: true });
+let current = null;
+
+finalMark.on("dragend", () => {
+  if (!current) return;
+  const p = finalMark.getLatLng();
+  setFinal(current, p.lat, p.lng);
+});
+
+function setFinal(s, lat, lng) {
+  fix[s.id] = { ...(fix[s.id] || {}), lat, lng };
+  save();
+  finalMark.setLatLng([lat, lng]);
+  renderList();
+  renderPanel();
+}
+
+// ---------- Paieška OpenStreetMap ----------
+async function geocode(q) {
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=lt&accept-language=lt&q=" + encodeURIComponent(q);
+  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json();
+  return j[0] ? { lat: +j[0].lat, lng: +j[0].lon, label: j[0].display_name } : null;
+}
+
+let running = false;
+async function run() {
+  running = true;
+  $("start").disabled = true;
+  $("stop").disabled = false;
+  for (let i = 0; i < SPOTS.length && running; i++) {
+    const s = SPOTS[i];
+    if (fix[s.id] && fix[s.id].checked) continue;
+    $("status").textContent = `Tikrinama ${i + 1} iš ${SPOTS.length}: ${s.n}`;
+    let cand = null;
+    try {
+      cand = await geocode(`${s.n}, ${s.p}`);
+      if (!cand) { await sleep(1100); cand = await geocode(s.n); }
+    } catch (e) {
+      $("status").textContent = "Paieškos klaida, bandau toliau po 5 s...";
+      await sleep(5000);
+      i--;
+      continue;
+    }
+    const f = { checked: true, cand };
+    // Jei rasta labai toli (>15 km), greičiausiai rasta kita vieta tokiu pat vardu – paliekam seną
+    if (cand && distKm(s, cand) <= 15) { f.lat = cand.lat; f.lng = cand.lng; }
+    fix[s.id] = { ...(fix[s.id] || {}), ...f };
+    save();
+    renderList();
+    await sleep(1100); // OpenStreetMap leidžia 1 paiešką per sekundę
+  }
+  running = false;
+  $("start").disabled = false;
+  $("stop").disabled = true;
+  renderList();
+}
+
+$("start").addEventListener("click", run);
+$("stop").addEventListener("click", () => { running = false; });
+
+// ---------- Sąrašas ----------
+let onlyBad = false;
+$("onlyBad").addEventListener("click", e => {
+  onlyBad = !onlyBad;
+  e.currentTarget.setAttribute("aria-pressed", String(onlyBad));
+  renderList();
+});
+
+function renderList() {
+  const checked = SPOTS.filter(s => fix[s.id] && fix[s.id].checked).length;
+  const bad = SPOTS.filter(s => level(s) === "bad").length;
+  const warn = SPOTS.filter(s => level(s) === "warn").length;
+  const done = SPOTS.filter(s => fix[s.id] && fix[s.id].done).length;
+  if (!running) $("status").textContent = `Patikrinta ${checked}/${SPOTS.length} · 🔴 ${bad} · 🟡 ${warn} · patvirtinta ranka ${done}`;
+
+  $("list").innerHTML = SPOTS
+    .filter(s => !onlyBad || ["bad", "warn"].includes(level(s)))
+    .map(s => {
+      const f = fix[s.id] || {};
+      const lv = level(s);
+      const d = f.cand ? distKm(s, f.cand).toFixed(1) + " km nuo senos vietos" : (f.checked ? "nerasta" : "dar netikrinta");
+      const cls = ["row", lv, f.done ? "done" : "", f.removed ? "removed" : "", current && current.id === s.id ? "active" : ""].join(" ");
+      return `<li class="${cls}" data-id="${s.id}" tabindex="0" role="button">
+        <strong>${esc(s.n)}</strong> <small>· ${esc(s.p)}</small><br><small>${d}${f.done ? " · ✓ patvirtinta" : ""}${f.removed ? " · pašalinta" : ""}</small></li>`;
+    }).join("");
+}
+
+function select(id) {
+  current = SPOTS.find(s => s.id === id);
+  if (!current) return;
+  const f = fix[current.id] || {};
+  const fp = finalPos(current);
+  oldMark.setLatLng([current.lat, current.lng]).addTo(map);
+  if (f.cand) candMark.setLatLng([f.cand.lat, f.cand.lng]).addTo(map); else candMark.remove();
+  finalMark.setLatLng([fp.lat, fp.lng]).addTo(map);
+  const pts = [[current.lat, current.lng], [fp.lat, fp.lng]];
+  if (f.cand) pts.push([f.cand.lat, f.cand.lng]);
+  map.fitBounds(pts, { padding: [60, 60], maxZoom: 15 });
+  renderPanel();
+  renderList();
+}
+
+$("list").addEventListener("click", e => {
+  const row = e.target.closest(".row");
+  if (row) select(Number(row.dataset.id));
+});
+$("list").addEventListener("keydown", e => {
+  const row = e.target.closest(".row");
+  if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(Number(row.dataset.id)); }
+});
+
+function renderPanel() {
+  if (!current) return;
+  const s = current, f = fix[s.id] || {}, fp = finalPos(s);
+  const gmaps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`${s.n}, ${s.p}`);
+  $("panel").innerHTML = `
+    <h2>${esc(s.n)}</h2>
+    <div><small>${esc(s.p)}</small></div>
+    <p><small>Rasta OpenStreetMap: ${f.cand ? esc(f.cand.label) : "nerasta"}</small></p>
+    <p>Galutinė vieta: <strong>${fp.lat.toFixed(5)}, ${fp.lng.toFixed(5)}</strong></p>
+    <p><a href="${gmaps}" target="_blank" rel="noopener">Atidaryti Google Maps ↗</a></p>
+    <label for="coords">Įklijuokite koordinates iš Google Maps:</label>
+    <input id="coords" placeholder="55.73380, 24.37610" inputmode="decimal">
+    <div class="btns">
+      <button type="button" id="apply">Pritaikyti koordinates</button>
+      ${f.cand ? '<button type="button" id="useCand">Naudoti mėlyną</button>' : ""}
+      <button type="button" id="useOld">Grąžinti seną</button>
+      <button type="button" id="remove">${f.removed ? "Grąžinti vietą" : "Pašalinti vietą"}</button>
+      <button type="button" id="ok" class="main">✓ Patvirtinti ir kita</button>
+    </div>`;
+  $("apply").onclick = () => {
+    const m = $("coords").value.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    if (!m) { alert("Neatpažinau. Įklijuokite taip: 55.73380, 24.37610"); return; }
+    const lat = +m[1], lng = +m[2];
+    if (!inLT(lat, lng)) { alert("Šios koordinatės ne Lietuvoje. Patikrinkite."); return; }
+    setFinal(s, lat, lng);
+  };
+  if (f.cand) $("useCand").onclick = () => setFinal(s, f.cand.lat, f.cand.lng);
+  $("useOld").onclick = () => setFinal(s, s.lat, s.lng);
+  $("remove").onclick = () => { fix[s.id] = { ...(fix[s.id] || {}), removed: !f.removed }; save(); renderPanel(); renderList(); };
+  $("ok").onclick = () => {
+    fix[s.id] = { ...(fix[s.id] || {}), done: true }; save();
+    const visible = [...document.querySelectorAll("#list .row")].map(r => Number(r.dataset.id));
+    const next = visible[visible.indexOf(s.id) + 1];
+    if (next) select(next); else { renderList(); renderPanel(); }
+  };
+}
+
+// ---------- Atsisiuntimas ----------
+$("download").addEventListener("click", () => {
+  const lines = SPOTS.filter(s => !(fix[s.id] && fix[s.id].removed)).map(s => {
+    const p = finalPos(s);
+    return JSON.stringify({ ...s, lat: +p.lat.toFixed(5), lng: +p.lng.toFixed(5) });
+  });
+  const text = "// Patikrinta " + new Date().toISOString().slice(0, 10) + "\nwindow.SPOTS = [\n" + lines.join(",\n") + "\n];\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));
+  a.download = "vietos.js";
+  a.click();
+});
+
+renderList();
+</script>
+</body>
+</html>
