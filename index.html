@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1a3c34">
-<meta name="description" content="Gražiausios Lietuvos vietos fotosesijoms: pilys, dvarai, gamta.">
+<meta name="description" content="Gražiausios Lietuvos vietos fotosesijoms: pilys, dvarai, parkai, gamta.">
 <title>FotoVietos LT</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -23,9 +23,12 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .controls{position:sticky;top:0;z-index:1000;background:var(--cream);padding:10px 16px 6px;max-width:1200px;margin:0 auto}
 #search{width:100%;font-size:16px;padding:12px 14px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--text)}
 #search:focus{outline:3px solid rgba(201,151,63,.45);border-color:var(--gold)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;border:1px solid #d9d2c3;background:#fff;color:var(--text);padding:8px 14px;border-radius:999px;font-size:14px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.chips.types .chip{font-size:13px;padding:6px 12px}
+.chips.types .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
 .chip:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .layout{max-width:1200px;margin:0 auto;padding:6px 16px 16px}
 #map{position:relative;isolation:isolate;height:45vh;min-height:280px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.08)}
@@ -53,7 +56,7 @@ footer a{color:var(--green);font-weight:600}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (min-width:900px){
   .layout{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start}
-  #map{position:sticky;top:120px;height:calc(100vh - 140px)}
+  #map{position:sticky;top:150px;height:calc(100vh - 170px)}
   .count{margin-top:0}
 }
 </style>
@@ -70,8 +73,9 @@ footer a{color:var(--green);font-weight:600}
 
 <div class="controls">
   <label class="visually-hidden" for="search">Ieškoti vietos</label>
-  <input id="search" type="search" placeholder="Ieškoti: pilis, Trakai, ežeras..." autocomplete="off">
+  <input id="search" type="search" placeholder="Ieškoti: pilis, parkas, Kaunas, ežeras..." autocomplete="off">
   <div id="filters" class="chips" role="group" aria-label="Kam tinka vieta"></div>
+  <div id="types" class="chips types" role="group" aria-label="Vietos tipas"></div>
 </div>
 
 <main class="layout">
@@ -84,7 +88,7 @@ footer a{color:var(--green);font-weight:600}
 
 <footer>
   <p>Koordinatės apytikslės. Mygtukas 🧭 atidaro Google Maps ir vietos ieško pagal pavadinimą.
-  Kai kuriose vietose profesionaliai fotosesijai reikia leidimo arba mokesčio, todėl pasitikslinkite iš anksto.</p>
+  Kai kuriose vietose (dvaruose, muziejuose, vienuolynuose) profesionaliai fotosesijai reikia leidimo ar mokesčio, todėl pasitikslinkite iš anksto.</p>
   <p>Ieškote fotografo? <a href="https://t.me/vestuviu_fotografas_bot" target="_blank" rel="noopener">Parašykite Irmantui Telegram'e</a></p>
 </footer>
 
@@ -94,62 +98,121 @@ footer a{color:var(--green);font-weight:600}
 <script>
 // =========================================================
 // VIETOS. Naują vietą pridėk nukopijavęs vieną eilutę ir pakeitęs reikšmes.
-// type: pilis, dvaras, gamta, griuvesiai, sakralu, kaimas, miestas, pajurys
+// type: pilis, dvaras, parkas, gamta, griuvesiai, sakralu, kaimas, miestas, pajurys
 // tags: vestuvems, poroms, seimai, portretams, menui
 // id turi būti unikalus skaičius.
 // =========================================================
 const SPOTS = [
-{id:1,name:"Trakų salos pilis",place:"Trakai",lat:54.6522,lng:24.9335,type:"pilis",tags:["vestuvems","poroms","seimai"],desc:"Gotikinė raudonų plytų pilis saloje, Galvės ežero apsuptyje.",tip:"Gražiausia šviesa saulėlydžio metu iš kito kranto. Savaitgaliais daug žmonių."},
-{id:2,name:"Užutrakio dvaras",place:"Trakai",lat:54.6447,lng:24.9540,type:"dvaras",tags:["vestuvems","poroms","portretams"],desc:"Tiškevičių rūmai ir parkas prie Galvės ežero.",tip:"Iš parko atsiveria vaizdas į Trakų pilį per ežerą."},
-{id:3,name:"Gedimino pilies bokštas",place:"Vilnius",lat:54.6867,lng:25.2907,type:"pilis",tags:["poroms","portretams"],desc:"Vilniaus simbolis su vaizdu į senamiesčio stogus.",tip:"Saulėlydis virš senamiesčio."},
-{id:4,name:"Vilniaus senamiestis",place:"Vilnius",lat:54.6833,lng:25.2897,type:"miestas",tags:["poroms","portretams","menui"],desc:"Siauros gatvelės, kiemeliai, bažnyčios ir arkos.",tip:"Ankstyvas rytas, kol nėra žmonių."},
-{id:5,name:"Užupis",place:"Vilnius",lat:54.6810,lng:25.2960,type:"miestas",tags:["poroms","menui","portretams"],desc:"Bohemiškas rajonas prie Vilnelės su meno kiemeliais.",tip:""},
-{id:6,name:"Verkių rūmai",place:"Vilnius",lat:54.7588,lng:25.2930,type:"dvaras",tags:["vestuvems","poroms","seimai"],desc:"Klasicistiniai rūmai ir parkas ant Neries šlaito.",tip:""},
-{id:7,name:"Pūčkorių atodanga",place:"Vilnius, Pavilnių regioninis parkas",lat:54.6800,lng:25.3430,type:"gamta",tags:["poroms","portretams","menui"],desc:"Aukšta atodanga virš Vilnios slėnio.",tip:"Rudenį spalvingi šlaitai."},
-{id:8,name:"Medininkų pilis",place:"Medininkai",lat:54.5397,lng:25.6497,type:"pilis",tags:["vestuvems","portretams","menui"],desc:"Didžiausia Lietuvoje aptvarinio tipo pilis su gynybinėmis sienomis.",tip:""},
-{id:9,name:"Kernavės piliakalniai",place:"Kernavė",lat:54.8865,lng:24.8510,type:"gamta",tags:["vestuvems","poroms","seimai"],desc:"Penki piliakalniai virš Neries slėnio, UNESCO paveldas.",tip:"Ankstyvą rytą slėnyje dažnai būna rūkas."},
-{id:10,name:"Kauno pilis",place:"Kaunas",lat:54.8990,lng:23.8853,type:"pilis",tags:["poroms","portretams"],desc:"Seniausia mūrinė pilis Lietuvoje, Nemuno ir Neries santakoje.",tip:""},
-{id:11,name:"Kauno rotušės aikštė",place:"Kaunas",lat:54.8968,lng:23.8860,type:"miestas",tags:["vestuvems","poroms"],desc:"Baltoji rotušė ir senamiesčio aikštė.",tip:"Rotušėje tuokiamasi, tad aikštė tinka iškart po ceremonijos."},
-{id:12,name:"Pažaislio vienuolynas",place:"Kaunas",lat:54.8760,lng:24.0180,type:"sakralu",tags:["vestuvems","portretams","menui"],desc:"Barokinis vienuolyno ansamblis prie Kauno marių.",tip:"Teritorijoje gali reikėti leidimo profesionaliai fotosesijai."},
-{id:13,name:"Raudondvario pilis",place:"Raudondvaris",lat:54.9440,lng:23.7700,type:"pilis",tags:["vestuvems","poroms"],desc:"Renesansinė pilis ir parkas prie Neries.",tip:""},
-{id:14,name:"Rumšiškių liaudies buities muziejus",place:"Rumšiškės",lat:54.8850,lng:24.2150,type:"kaimas",tags:["seimai","poroms","menui"],desc:"Senoviniai kaimai, sodybos, malūnai ir bažnytėlė.",tip:"Dėl fotosesijos pasitikslink muziejuje."},
-{id:15,name:"Birštono apžvalgos bokštas",place:"Birštonas",lat:54.6040,lng:24.0280,type:"gamta",tags:["poroms","seimai"],desc:"Vaizdas į Nemuno kilpas ir pušynus.",tip:""},
-{id:16,name:"Raudonės pilis",place:"Raudonė",lat:55.0950,lng:23.1260,type:"pilis",tags:["vestuvems","poroms"],desc:"Neogotikinė pilis su bokštu ir parku virš Nemuno.",tip:""},
-{id:17,name:"Panemunės pilis",place:"Vytėnai",lat:55.0789,lng:22.9730,type:"pilis",tags:["vestuvems","poroms","menui"],desc:"Renesansinė pilis su tvenkiniais ir parku.",tip:""},
-{id:18,name:"Biržų pilis",place:"Biržai",lat:56.2030,lng:24.7530,type:"pilis",tags:["vestuvems","seimai"],desc:"Bastioninė tvirtovė prie Širvėnos ežero.",tip:""},
-{id:19,name:"Kirkilų apžvalgos bokštas",place:"Kirkilai, Biržų raj.",lat:56.2440,lng:24.8000,type:"gamta",tags:["poroms","menui"],desc:"Karstinių įgriuvų ežerėliai ir bokštas virš jų.",tip:""},
-{id:20,name:"Pakruojo dvaras",place:"Pakruojis",lat:55.9790,lng:23.8600,type:"dvaras",tags:["vestuvems","poroms"],desc:"Vienas didžiausių dvarų Lietuvoje su tiltais ir parku.",tip:""},
-{id:21,name:"Kryžių kalnas",place:"Jurgaičiai, Šiaulių raj.",lat:56.0153,lng:23.4167,type:"sakralu",tags:["menui"],desc:"Tūkstančiai kryžių ant piliakalnio.",tip:"Tai maldos vieta, fotografuokite ramiai ir pagarbiai."},
-{id:22,name:"Rokiškio dvaras",place:"Rokiškis",lat:55.9530,lng:25.5770,type:"dvaras",tags:["vestuvems","seimai"],desc:"Tyzenhauzų dvaras su parku ir tvenkiniu.",tip:""},
-{id:23,name:"Anykščių lajų takas",place:"Anykščiai",lat:55.4930,lng:25.0990,type:"gamta",tags:["seimai","poroms"],desc:"Takas virš medžių lajų ir apžvalgos bokštas.",tip:""},
-{id:24,name:"Puntuko akmuo",place:"Anykščių šilelis",lat:55.4870,lng:25.0840,type:"gamta",tags:["seimai","menui"],desc:"Didelis riedulys pušyne prie Šventosios.",tip:""},
-{id:25,name:"Raguvėlės dvaras",place:"Raguvėlė, Anykščių raj.",lat:55.6220,lng:24.7520,type:"dvaras",tags:["vestuvems","poroms","menui"],desc:"Senas dvaras su parku ir romantiška atmosfera.",tip:""},
-{id:26,name:"Ladakalnis",place:"Aukštaitijos nacionalinis parkas",lat:55.4100,lng:26.0450,type:"gamta",tags:["poroms","vestuvems","menui"],desc:"Kalva, nuo kurios matosi keli ežerai.",tip:"Saulėtekis su rūku virš ežerų."},
-{id:27,name:"Ginučių vandens malūnas",place:"Ginučiai",lat:55.4240,lng:26.0560,type:"kaimas",tags:["poroms","seimai","menui"],desc:"Senas vandens malūnas prie upelio.",tip:""},
-{id:28,name:"Dubingių piliakalnis",place:"Dubingiai",lat:55.0610,lng:25.4470,type:"griuvesiai",tags:["poroms","menui"],desc:"Radvilų pilies liekanos ant Asvejos ežero kranto.",tip:""},
-{id:29,name:"Merkinės piliakalnis",place:"Merkinė",lat:54.1600,lng:24.1870,type:"gamta",tags:["poroms","menui"],desc:"Piliakalnis Merkio ir Nemuno santakoje.",tip:""},
-{id:30,name:"Liškiavos bažnyčia",place:"Liškiava",lat:54.0840,lng:24.2570,type:"sakralu",tags:["vestuvems","poroms"],desc:"Baroko ansamblis virš Nemuno slėnio, šalia piliakalnio.",tip:""},
-{id:31,name:"Zervynų kaimas",place:"Dzūkijos nacionalinis parkas",lat:54.1360,lng:24.5190,type:"kaimas",tags:["menui","poroms"],desc:"Senas gatvinis kaimas su medinėmis sodybomis prie Ūlos.",tip:"Gyvenamas kaimas, gerbkite gyventojus."},
-{id:32,name:"Parnidžio kopa",place:"Nida",lat:55.2990,lng:21.0060,type:"pajurys",tags:["vestuvems","poroms","menui"],desc:"Aukšta kopa su saulės laikrodžiu ir vaizdu į marias.",tip:"Saulėlydis. Nuo takų nenukrypkite, kopos saugomos."},
-{id:33,name:"Raganų kalnas",place:"Juodkrantė",lat:55.5480,lng:21.1210,type:"gamta",tags:["seimai","menui"],desc:"Medinės skulptūros pušyne.",tip:""},
-{id:34,name:"Ventės ragas",place:"Ventė",lat:55.3420,lng:21.1900,type:"pajurys",tags:["poroms","menui"],desc:"Švyturys ir marių pakrantė.",tip:""},
-{id:35,name:"Palangos tiltas",place:"Palanga",lat:55.9196,lng:21.0473,type:"pajurys",tags:["poroms","vestuvems"],desc:"Ilgas tiltas į jūrą.",tip:"Saulėlydis virš jūros."},
-{id:36,name:"Palangos botanikos parkas",place:"Palanga",lat:55.9050,lng:21.0620,type:"dvaras",tags:["vestuvems","seimai"],desc:"Tiškevičių rūmai, parkas ir Birutės kalnas.",tip:""},
-{id:37,name:"Plungės Oginskių dvaras",place:"Plungė",lat:55.9110,lng:21.8530,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai ir didelis parkas su tvenkiniais.",tip:""},
-{id:38,name:"Orvidų sodyba",place:"Salantai",lat:56.0080,lng:21.6070,type:"kaimas",tags:["menui"],desc:"Neįprasta sodyba su akmenimis ir skulptūromis.",tip:""},
-{id:39,name:"Skaistakalnio parkas",place:"Panevėžys",lat:55.7338,lng:24.3761,type:"gamta",tags:["seimai","portretams","vestuvems"],desc:"Ramus parkas su žaluma prie Nevėžio.",tip:""},
-{id:40,name:"Senvagė",place:"Panevėžys",lat:55.7311,lng:24.3627,type:"miestas",tags:["vestuvems","poroms"],desc:"Romantiška vieta prie vandens, vakare fontanai.",tip:""}
+// ---------- Vilnius ir apylinkės ----------
+{id:1,name:"Gedimino pilies bokštas",place:"Vilnius",lat:54.6867,lng:25.2907,type:"pilis",tags:["poroms","portretams"],desc:"Vilniaus simbolis su vaizdu į senamiesčio stogus.",tip:"Saulėlydis virš senamiesčio."},
+{id:2,name:"Vilniaus senamiestis",place:"Vilnius",lat:54.6810,lng:25.2870,type:"miestas",tags:["poroms","portretams","menui"],desc:"Siauros gatvelės, kiemeliai, arkos ir bažnyčios.",tip:"Ankstyvas rytas, kol nėra žmonių."},
+{id:3,name:"Užupis",place:"Vilnius",lat:54.6810,lng:25.2960,type:"miestas",tags:["poroms","menui","portretams"],desc:"Bohemiškas rajonas prie Vilnelės su meno kiemeliais."},
+{id:4,name:"Šv. Onos bažnyčia",place:"Vilnius",lat:54.6828,lng:25.2936,type:"sakralu",tags:["vestuvems","poroms","portretams"],desc:"Gotikos perlas iš raudonų plytų."},
+{id:5,name:"Bernardinų sodas",place:"Vilnius",lat:54.6840,lng:25.2950,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Sodas prie Vilnelės su fontanais ir gėlynais.",tip:"Pavasarį žydi sakuros."},
+{id:6,name:"Trijų kryžių kalnas",place:"Vilnius",lat:54.6865,lng:25.2985,type:"gamta",tags:["poroms","portretams"],desc:"Kalva su panorama į visą Vilnių."},
+{id:7,name:"Vingio parkas",place:"Vilnius",lat:54.6835,lng:25.2385,type:"parkas",tags:["seimai","poroms"],desc:"Didelis miško parkas prie Neries."},
+{id:8,name:"Sapiegų rūmai ir parkas",place:"Vilnius, Antakalnis",lat:54.6960,lng:25.3080,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Baroko rūmai ir senas parkas su takeliais."},
+{id:9,name:"Šv. Petro ir Povilo bažnyčia",place:"Vilnius, Antakalnis",lat:54.6935,lng:25.3075,type:"sakralu",tags:["vestuvems"],desc:"Baltas baroko interjeras su tūkstančiais lipdinių."},
+{id:10,name:"Tuskulėnų dvaro parkas",place:"Vilnius",lat:54.6985,lng:25.2790,type:"parkas",tags:["seimai","portretams"],desc:"Ramus parkas su dvaro pastatais prie Neries."},
+{id:11,name:"Verkių rūmai",place:"Vilnius",lat:54.7588,lng:25.2930,type:"dvaras",tags:["vestuvems","poroms","seimai"],desc:"Klasicistiniai rūmai ir parkas ant Neries šlaito."},
+{id:12,name:"Belmontas",place:"Vilnius, Pavilniai",lat:54.6855,lng:25.3385,type:"gamta",tags:["poroms","seimai"],desc:"Vilnios slėnis, senas malūnas ir krioklys."},
+{id:13,name:"Pūčkorių atodanga",place:"Vilnius, Pavilnių regioninis parkas",lat:54.6800,lng:25.3430,type:"gamta",tags:["poroms","portretams","menui"],desc:"Aukšta atodanga virš Vilnios slėnio.",tip:"Rudenį spalvingi šlaitai."},
+{id:14,name:"Europos parkas",place:"Joneikiškės, Vilniaus raj.",lat:54.9230,lng:25.3220,type:"parkas",tags:["menui","seimai"],desc:"Šiuolaikinių skulptūrų parkas miške."},
+{id:15,name:"Liubavo dvaras",place:"Liubavas, Vilniaus raj.",lat:54.7880,lng:25.1660,type:"dvaras",tags:["vestuvems","poroms","menui"],desc:"Senas dvaras su vandens malūnu ir tvenkiniais."},
+{id:16,name:"Vokės dvaras",place:"Trakų Vokė, Vilnius",lat:54.6350,lng:25.1150,type:"dvaras",tags:["vestuvems","poroms"],desc:"Tiškevičių rūmai ir parkas su kanalais."},
+{id:17,name:"Trakų salos pilis",place:"Trakai",lat:54.6522,lng:24.9335,type:"pilis",tags:["vestuvems","poroms","seimai"],desc:"Gotikinė pilis saloje, Galvės ežero apsuptyje.",tip:"Saulėlydis iš kito kranto. Savaitgaliais daug žmonių."},
+{id:18,name:"Užutrakio dvaras",place:"Trakai",lat:54.6447,lng:24.9540,type:"dvaras",tags:["vestuvems","poroms","portretams"],desc:"Tiškevičių rūmai ir parkas prie Galvės ežero.",tip:"Iš parko matosi Trakų pilis per ežerą."},
+{id:19,name:"Medininkų pilis",place:"Medininkai",lat:54.5397,lng:25.6497,type:"pilis",tags:["vestuvems","portretams","menui"],desc:"Didžiausia aptvarinio tipo pilis Lietuvoje."},
+{id:20,name:"Kernavės piliakalniai",place:"Kernavė",lat:54.8865,lng:24.8510,type:"gamta",tags:["vestuvems","poroms","seimai"],desc:"Penki piliakalniai virš Neries slėnio, UNESCO paveldas.",tip:"Ankstyvą rytą slėnyje dažnai rūkas."},
+{id:21,name:"Dubingių piliakalnis",place:"Dubingiai",lat:55.0610,lng:25.4470,type:"griuvesiai",tags:["poroms","menui"],desc:"Radvilų pilies liekanos ant Asvejos ežero kranto."},
+// ---------- Kaunas ir apylinkės ----------
+{id:22,name:"Kauno pilis",place:"Kaunas",lat:54.8990,lng:23.8853,type:"pilis",tags:["poroms","portretams"],desc:"Seniausia mūrinė pilis Lietuvoje."},
+{id:23,name:"Kauno rotušės aikštė",place:"Kaunas",lat:54.8968,lng:23.8860,type:"miestas",tags:["vestuvems","poroms"],desc:"Baltoji rotušė ir senamiesčio aikštė.",tip:"Tinka iškart po ceremonijos rotušėje."},
+{id:24,name:"Santakos parkas",place:"Kaunas",lat:54.8985,lng:23.8790,type:"parkas",tags:["poroms","seimai"],desc:"Nemuno ir Neries santaka prie pilies.",tip:"Saulėlydis virš upių."},
+{id:25,name:"Kauno botanikos sodas",place:"Kaunas, Aukštoji Fredа",lat:54.8705,lng:23.9105,type:"parkas",tags:["vestuvems","poroms","seimai"],desc:"Rūmai, tvenkiniai, tiltelis ir oranžerijos.",tip:"Už fotosesiją gali reikėti mokėti."},
+{id:26,name:"Ąžuolyno parkas",place:"Kaunas",lat:54.9000,lng:23.9450,type:"parkas",tags:["seimai","poroms"],desc:"Didžiausias ąžuolų parkas Europos mieste."},
+{id:27,name:"Pažaislio vienuolynas",place:"Kaunas",lat:54.8760,lng:24.0180,type:"sakralu",tags:["vestuvems","portretams","menui"],desc:"Barokinis ansamblis prie Kauno marių.",tip:"Gali reikėti leidimo."},
+{id:28,name:"Raudondvario pilis",place:"Raudondvaris",lat:54.9440,lng:23.7700,type:"pilis",tags:["vestuvems","poroms"],desc:"Renesansinė pilis ir parkas prie Neries."},
+{id:29,name:"Zapyškio Šv. Jono bažnyčia",place:"Zapyškis",lat:54.9075,lng:23.6590,type:"sakralu",tags:["vestuvems","poroms","menui"],desc:"Gotikinė bažnytėlė pievoje prie Nemuno."},
+{id:30,name:"Rumšiškių liaudies buities muziejus",place:"Rumšiškės",lat:54.8850,lng:24.2150,type:"kaimas",tags:["seimai","poroms","menui"],desc:"Senoviniai kaimai, sodybos ir malūnai.",tip:"Dėl fotosesijos pasitikslink muziejuje."},
+{id:31,name:"Birštono apžvalgos bokštas",place:"Birštonas",lat:54.6040,lng:24.0280,type:"gamta",tags:["poroms","seimai"],desc:"Vaizdas į Nemuno kilpas ir pušynus."},
+{id:32,name:"Kėdainių senamiestis",place:"Kėdainiai",lat:55.2880,lng:23.9740,type:"miestas",tags:["poroms","portretams"],desc:"Jaukios aikštės, senos gatvelės ir minaretas."},
+// ---------- Panemunė ----------
+{id:33,name:"Raudonės pilis",place:"Raudonė",lat:55.0950,lng:23.1260,type:"pilis",tags:["vestuvems","poroms"],desc:"Neogotikinė pilis su bokštu ir parku virš Nemuno."},
+{id:34,name:"Panemunės pilis",place:"Vytėnai",lat:55.0790,lng:23.0450,type:"pilis",tags:["vestuvems","poroms","menui"],desc:"Renesansinė pilis su tvenkiniais ir parku."},
+{id:35,name:"Gelgaudiškio dvaras",place:"Gelgaudiškis",lat:55.0800,lng:22.9750,type:"dvaras",tags:["menui","poroms"],desc:"Apleisti rūmai su didžiuliu parku, romantiškai nykus.",tip:"Į pastatus neįeikite."},
+{id:36,name:"Belvederio dvaras",place:"Seredžius",lat:55.0780,lng:23.3900,type:"dvaras",tags:["vestuvems","menui"],desc:"Italų stiliaus rūmai ant kalvos virš Nemuno."},
+{id:37,name:"Jurbarko dvaro parkas",place:"Jurbarkas",lat:55.0770,lng:22.7750,type:"parkas",tags:["seimai","vestuvems"],desc:"Senas parkas su tvenkiniais ir skulptūromis."},
+// ---------- Suvalkija ir Dzūkija ----------
+{id:38,name:"Paežerių dvaras",place:"Paežeriai, Vilkaviškio raj.",lat:54.6370,lng:23.0400,type:"dvaras",tags:["vestuvems","seimai"],desc:"Klasicistiniai rūmai prie ežero."},
+{id:39,name:"Punios šilas",place:"Punia",lat:54.5200,lng:24.0800,type:"gamta",tags:["poroms","menui"],desc:"Senas pušynas, vadinamas Lietuvos džiunglėmis."},
+{id:40,name:"Merkinės piliakalnis",place:"Merkinė",lat:54.1600,lng:24.1870,type:"gamta",tags:["poroms","menui"],desc:"Piliakalnis Merkio ir Nemuno santakoje."},
+{id:41,name:"Liškiavos bažnyčia",place:"Liškiava",lat:54.0840,lng:24.2570,type:"sakralu",tags:["vestuvems","poroms"],desc:"Baroko ansamblis virš Nemuno slėnio."},
+{id:42,name:"Zervynų kaimas",place:"Dzūkijos nacionalinis parkas",lat:54.1360,lng:24.5190,type:"kaimas",tags:["menui","poroms"],desc:"Medinės sodybos prie Ūlos upės.",tip:"Gyvenamas kaimas, gerbkite gyventojus."},
+{id:43,name:"Čepkelių raistas",place:"Marcinkonys",lat:54.0000,lng:24.4700,type:"gamta",tags:["menui"],desc:"Didžiausia Lietuvos pelkė su mistiškais vaizdais.",tip:"Rezervatas, eiti tik leidžiamais takais."},
+{id:44,name:"Druskininkų miesto parkas",place:"Druskininkai",lat:54.0170,lng:23.9720,type:"parkas",tags:["seimai","poroms"],desc:"Parkai prie Nemuno ir Druskonio ežero."},
+{id:45,name:"Grūto parkas",place:"Grūtas, Druskininkų sav.",lat:54.0170,lng:24.0570,type:"parkas",tags:["menui"],desc:"Sovietinių skulptūrų parkas miške."},
+// ---------- Aukštaitija ----------
+{id:46,name:"Ladakalnis",place:"Aukštaitijos nacionalinis parkas",lat:55.4100,lng:26.0450,type:"gamta",tags:["poroms","vestuvems","menui"],desc:"Kalva su vaizdu į kelis ežerus.",tip:"Saulėtekis su rūku."},
+{id:47,name:"Ginučių vandens malūnas",place:"Ginučiai",lat:55.4240,lng:26.0560,type:"kaimas",tags:["poroms","seimai","menui"],desc:"Senas vandens malūnas prie upelio."},
+{id:48,name:"Palūšės bažnyčia",place:"Palūšė",lat:55.3330,lng:26.1040,type:"sakralu",tags:["vestuvems","menui"],desc:"Medinė bažnyčia ir varpinė prie Lūšių ežero."},
+{id:49,name:"Taurapilio piliakalnis",place:"Tauragnai",lat:55.4560,lng:25.8350,type:"gamta",tags:["poroms","menui"],desc:"Piliakalnis prie giliausio Lietuvos ežero Tauragno."},
+{id:50,name:"Anykščių lajų takas",place:"Anykščiai",lat:55.4930,lng:25.0990,type:"gamta",tags:["seimai","poroms"],desc:"Takas virš medžių lajų ir apžvalgos bokštas."},
+{id:51,name:"Puntuko akmuo",place:"Anykščių šilelis",lat:55.4870,lng:25.0840,type:"gamta",tags:["seimai","menui"],desc:"Didelis riedulys pušyne prie Šventosios."},
+{id:52,name:"Raguvėlės dvaras",place:"Raguvėlė, Anykščių raj.",lat:55.6220,lng:24.7520,type:"dvaras",tags:["vestuvems","poroms","menui"],desc:"Senas dvaras su parku ir romantiška atmosfera."},
+{id:53,name:"Taujėnų dvaras",place:"Taujėnai, Ukmergės raj.",lat:55.3950,lng:24.7000,type:"dvaras",tags:["vestuvems","poroms"],desc:"Radvilų rūmai ir parkas."},
+{id:54,name:"Rokiškio dvaras",place:"Rokiškis",lat:55.9530,lng:25.5770,type:"dvaras",tags:["vestuvems","seimai"],desc:"Tyzenhauzų dvaras su parku ir tvenkiniu."},
+{id:55,name:"Stelmužės ąžuolas",place:"Stelmužė, Zarasų raj.",lat:55.8330,lng:26.2000,type:"gamta",tags:["seimai","menui"],desc:"Seniausias Lietuvos ąžuolas ir medinė bažnyčia."},
+{id:56,name:"Zarasų Didžioji sala",place:"Zarasai",lat:55.7280,lng:26.2470,type:"parkas",tags:["poroms","seimai"],desc:"Sala su parku, apžvalgos ratu ir ežerų vaizdais."},
+{id:57,name:"Biržų pilis",place:"Biržai",lat:56.2030,lng:24.7530,type:"pilis",tags:["vestuvems","seimai"],desc:"Bastioninė tvirtovė prie Širvėnos ežero."},
+{id:58,name:"Kirkilų apžvalgos bokštas",place:"Kirkilai, Biržų raj.",lat:56.2440,lng:24.8000,type:"gamta",tags:["poroms","menui"],desc:"Karstinių įgriuvų ežerėliai ir bokštas virš jų."},
+{id:59,name:"Pakruojo dvaras",place:"Pakruojis",lat:55.9790,lng:23.8600,type:"dvaras",tags:["vestuvems","poroms"],desc:"Vienas didžiausių dvarų su tiltais ir parku."},
+// ---------- Panevėžys ----------
+{id:60,name:"Skaistakalnio parkas",place:"Panevėžys",lat:55.7338,lng:24.3761,type:"parkas",tags:["seimai","portretams","vestuvems"],desc:"Ramus parkas su žaluma prie Nevėžio."},
+{id:61,name:"Senvagė",place:"Panevėžys",lat:55.7311,lng:24.3627,type:"miestas",tags:["vestuvems","poroms"],desc:"Romantiška vieta prie vandens, vakare fontanai."},
+{id:62,name:"Bistrampolio dvaras",place:"Bistrampolis, Panevėžio raj.",lat:55.6500,lng:24.3300,type:"dvaras",tags:["vestuvems","poroms"],desc:"Rūmai, parkas ir tvenkiniai netoli Panevėžio."},
+{id:63,name:"Krekenavos bazilika",place:"Krekenava",lat:55.5390,lng:24.0940,type:"sakralu",tags:["vestuvems"],desc:"Didinga bazilika prie Nevėžio."},
+// ---------- Šiaurės ir Vidurio Lietuva ----------
+{id:64,name:"Kryžių kalnas",place:"Jurgaičiai, Šiaulių raj.",lat:56.0153,lng:23.4167,type:"sakralu",tags:["menui"],desc:"Tūkstančiai kryžių ant piliakalnio.",tip:"Maldos vieta, fotografuokite pagarbiai."},
+{id:65,name:"Talšos ežero pakrantė",place:"Šiauliai",lat:55.9310,lng:23.3060,type:"parkas",tags:["poroms","seimai"],desc:"Promenada ir parkas prie ežero."},
+{id:66,name:"Chaimo Frenkelio vila",place:"Šiauliai",lat:55.9260,lng:23.3420,type:"dvaras",tags:["vestuvems","portretams"],desc:"Moderno stiliaus vila su parku."},
+{id:67,name:"Burbiškio dvaras",place:"Burbiškis, Radviliškio raj.",lat:55.7520,lng:23.6530,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai, tvenkiniai ir tulpių žydėjimas pavasarį."},
+{id:68,name:"Kurtuvėnų dvaras",place:"Kurtuvėnai, Šiaulių raj.",lat:55.8250,lng:23.0500,type:"dvaras",tags:["poroms","seimai"],desc:"Dvaro sodyba regioniniame parke."},
+{id:69,name:"Žagarės dvaras",place:"Žagarė",lat:56.3600,lng:23.2450,type:"dvaras",tags:["poroms","menui"],desc:"Rūmai ir didelis parkas prie Švėtės."},
+{id:70,name:"Tytuvėnų vienuolynas",place:"Tytuvėnai",lat:55.6000,lng:23.2000,type:"sakralu",tags:["vestuvems","menui"],desc:"Renesanso ansamblis su arkadiniu kiemu."},
+{id:71,name:"Kelmės dvaras",place:"Kelmė",lat:55.6320,lng:22.9350,type:"dvaras",tags:["seimai"],desc:"Senas dvaras ir parkas prie Kražantės."},
+// ---------- Žemaitija ----------
+{id:72,name:"Šatrijos kalnas",place:"Luokė, Telšių raj.",lat:55.9370,lng:22.4200,type:"gamta",tags:["poroms","menui"],desc:"Legendų apipintas kalnas su plačia panorama."},
+{id:73,name:"Masčio ežero pakrantė",place:"Telšiai",lat:55.9870,lng:22.2470,type:"parkas",tags:["poroms","seimai"],desc:"Promenada ir amfiteatras prie ežero."},
+{id:74,name:"Plungės Oginskių dvaras",place:"Plungė",lat:55.9110,lng:21.8530,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai ir didelis parkas su tvenkiniais."},
+{id:75,name:"Platelių ežeras",place:"Žemaitijos nacionalinis parkas",lat:56.0450,lng:21.8450,type:"gamta",tags:["poroms","seimai"],desc:"Didelis ežeras su salomis ir pakrantės takais."},
+{id:76,name:"Žemaičių Kalvarija",place:"Žemaičių Kalvarija",lat:56.1200,lng:21.8800,type:"sakralu",tags:["menui"],desc:"Bazilika ir Kryžiaus kelio koplyčios kalvose."},
+{id:77,name:"Orvidų sodyba",place:"Salantai",lat:56.0080,lng:21.6070,type:"kaimas",tags:["menui"],desc:"Neįprasta sodyba su akmenimis ir skulptūromis."},
+{id:78,name:"Renavo dvaras",place:"Renavas, Mažeikių raj.",lat:56.2430,lng:22.0580,type:"dvaras",tags:["vestuvems","poroms"],desc:"Neobaroko rūmai ir parkas prie Ventos."},
+{id:79,name:"Švėkšnos dvaras",place:"Švėkšna",lat:55.5200,lng:21.6180,type:"dvaras",tags:["vestuvems","seimai"],desc:"Parkas, tvenkinys ir neogotikinė bažnyčia šalia."},
+// ---------- Pajūris ----------
+{id:80,name:"Kretingos dvaras ir žiemos sodas",place:"Kretinga",lat:55.8880,lng:21.2440,type:"dvaras",tags:["vestuvems","seimai"],desc:"Rūmai su žiemos sodu ir parku.",tip:"Žiemos sodas tinka ir lyjant."},
+{id:81,name:"Palangos tiltas",place:"Palanga",lat:55.9196,lng:21.0473,type:"pajurys",tags:["poroms","vestuvems"],desc:"Ilgas tiltas į jūrą.",tip:"Saulėlydis virš jūros."},
+{id:82,name:"Palangos botanikos parkas",place:"Palanga",lat:55.9050,lng:21.0620,type:"parkas",tags:["vestuvems","seimai"],desc:"Tiškevičių rūmai, parkas ir Birutės kalnas."},
+{id:83,name:"Olando kepurė",place:"Karklė",lat:55.8320,lng:21.0700,type:"pajurys",tags:["poroms","vestuvems","menui"],desc:"Aukštas skardis virš jūros.",tip:"Saulėlydis."},
+{id:84,name:"Klaipėdos senamiestis",place:"Klaipėda",lat:55.7090,lng:21.1310,type:"miestas",tags:["poroms","portretams"],desc:"Fachverkiniai namai, kiemeliai ir Danės krantinė."},
+{id:85,name:"Smiltynė, Kopgalis",place:"Klaipėda",lat:55.7200,lng:21.0950,type:"pajurys",tags:["poroms","seimai"],desc:"Pliažas, kopos ir molas Kuršių nerijos pradžioje."},
+{id:86,name:"Raganų kalnas",place:"Juodkrantė",lat:55.5480,lng:21.1210,type:"gamta",tags:["seimai","menui"],desc:"Medinės skulptūros pušyne."},
+{id:87,name:"Parnidžio kopa",place:"Nida",lat:55.2990,lng:21.0060,type:"pajurys",tags:["vestuvems","poroms","menui"],desc:"Aukšta kopa su vaizdu į marias.",tip:"Saulėlydis. Nuo takų nenukrypkite."},
+{id:88,name:"Ventės ragas",place:"Ventė",lat:55.3420,lng:21.1900,type:"pajurys",tags:["poroms","menui"],desc:"Švyturys ir marių pakrantė."},
+{id:89,name:"Mingės kaimas",place:"Minija, Šilutės raj.",lat:55.3340,lng:21.2950,type:"kaimas",tags:["menui","poroms"],desc:"Kaimas abipus Minijos upės, Lietuvos Venecija."}
 ];
 
 const TYPES = {
-  pilis:{label:"Pilis",icon:"🏰"},
-  dvaras:{label:"Dvaras, rūmai",icon:"🏛️"},
-  gamta:{label:"Gamta",icon:"🌲"},
-  griuvesiai:{label:"Griuvėsiai",icon:"🧱"},
-  sakralu:{label:"Bažnyčia, vienuolynas",icon:"⛪"},
-  kaimas:{label:"Senovinis kaimas",icon:"🏡"},
-  miestas:{label:"Miestas",icon:"🏙️"},
-  pajurys:{label:"Pajūris",icon:"🌊"}
+  pilis:{label:"Pilis",plural:"Pilys",icon:"🏰"},
+  dvaras:{label:"Dvaras, rūmai",plural:"Dvarai",icon:"🏛️"},
+  parkas:{label:"Parkas",plural:"Parkai",icon:"🌳"},
+  gamta:{label:"Gamta",plural:"Gamta",icon:"🌲"},
+  griuvesiai:{label:"Griuvėsiai",plural:"Griuvėsiai",icon:"🧱"},
+  sakralu:{label:"Bažnyčia, vienuolynas",plural:"Bažnyčios",icon:"⛪"},
+  kaimas:{label:"Senovinis kaimas",plural:"Kaimai",icon:"🏡"},
+  miestas:{label:"Miestas",plural:"Miestai",icon:"🏙️"},
+  pajurys:{label:"Pajūris",plural:"Pajūris",icon:"🌊"}
 };
 const TAGS = {
   vestuvems:{label:"Vestuvėms",color:"#c2255c",bg:"#fde2ec"},
@@ -174,12 +237,12 @@ function distanceKm(a, b) {
 
 // ---------- Būsena ----------
 let activeTag = "all";
+let activeType = "all";
 let query = "";
 let userPos = null;
 
 const listEl = document.getElementById("list");
 const countEl = document.getElementById("count");
-const filtersEl = document.getElementById("filters");
 const mapEl = document.getElementById("map");
 const offlineEl = document.getElementById("offline");
 const locateBtn = document.getElementById("locate");
@@ -191,7 +254,6 @@ window.addEventListener("offline", updateOnline);
 updateOnline();
 
 // ---------- Žemėlapis ----------
-// Jei Leaflet neužsikrovė (pirmas paleidimas be interneto), rodomas tik sąrašas.
 const hasMap = typeof L !== "undefined";
 let map = null;
 let markersLayer = null;
@@ -239,18 +301,31 @@ if (hasMap) {
 }
 
 // ---------- Filtrai ----------
-const chipDefs = [["all", "Visos"], ...Object.entries(TAGS).map(([key, v]) => [key, v.label])];
-filtersEl.innerHTML = chipDefs
-  .map(([key, label]) => `<button type="button" class="chip" data-tag="${key}" aria-pressed="${key === "all"}">${esc(label)}</button>`)
-  .join("");
+function setupChips(el, defs, onPick) {
+  el.innerHTML = defs
+    .map(([key, label]) => `<button type="button" class="chip" data-key="${key}" aria-pressed="${key === "all"}">${esc(label)}</button>`)
+    .join("");
+  el.addEventListener("click", e => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    el.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === chip)));
+    onPick(chip.dataset.key);
+    render({ fit: true });
+  });
+}
 
-filtersEl.addEventListener("click", e => {
-  const chip = e.target.closest(".chip");
-  if (!chip) return;
-  activeTag = chip.dataset.tag;
-  filtersEl.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === chip)));
-  render({ fit: true });
-});
+setupChips(
+  document.getElementById("filters"),
+  [["all", "Visos"], ...Object.entries(TAGS).map(([k, v]) => [k, v.label])],
+  key => { activeTag = key; }
+);
+
+const usedTypes = Object.keys(TYPES).filter(k => SPOTS.some(s => s.type === k));
+setupChips(
+  document.getElementById("types"),
+  [["all", "Visi tipai"], ...usedTypes.map(k => [k, `${TYPES[k].icon} ${TYPES[k].plural}`])],
+  key => { activeType = key; }
+);
 
 let searchTimer = null;
 document.getElementById("search").addEventListener("input", e => {
@@ -264,8 +339,10 @@ document.getElementById("search").addEventListener("input", e => {
 // ---------- Sąrašas ----------
 function matches(s) {
   if (activeTag !== "all" && !s.tags.includes(activeTag)) return false;
+  if (activeType !== "all" && s.type !== activeType) return false;
   if (!query) return true;
-  const haystack = norm([s.name, s.place, s.desc, s.tip, typeOf(s).label, ...s.tags.map(k => TAGS[k]?.label || k)].join(" "));
+  const t = typeOf(s);
+  const haystack = norm([s.name, s.place, s.desc, s.tip, t.label, t.plural, ...s.tags.map(k => TAGS[k]?.label || k)].join(" "));
   return query.split(/\s+/).every(word => haystack.includes(word));
 }
 
@@ -305,10 +382,12 @@ function render({ fit = false } = {}) {
     }
   }
 
-  countEl.textContent = list.length ? `Rasta vietų: ${list.length}` : "";
+  countEl.textContent = list.length
+    ? `Rasta vietų: ${list.length}${userPos ? " · surikiuota pagal atstumą" : ""}`
+    : "";
   listEl.innerHTML = list.length
     ? list.map(cardHtml).join("")
-    : `<li class="empty">Nieko nerasta. Pabandykite kitą žodį arba pasirinkite „Visos“.</li>`;
+    : `<li class="empty">Nieko nerasta. Pabandykite kitą žodį arba pasirinkite „Visos“ ir „Visi tipai“.</li>`;
 }
 
 listEl.addEventListener("click", e => {
@@ -352,7 +431,6 @@ locateBtn.addEventListener("click", () => {
         map.setView(userPos, 9);
       }
       render();
-      countEl.textContent += " · surikiuota pagal atstumą";
     },
     err => {
       locateBtn.disabled = false;
@@ -366,7 +444,7 @@ locateBtn.addEventListener("click", () => {
 
 render({ fit: true });
 
-// ---------- Programėlės režimas (įdiegimui į telefoną) ----------
+// ---------- Programėlės režimas ----------
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
