@@ -1,13 +1,9 @@
-// Programėlės failai išsaugomi telefone, kad ji atsidarytų ir be interneto.
-// Žemėlapio plytelės visada imamos iš interneto.
-const CACHE = "fotovietos-v1";
+// Programėlė visada pirma ima naujausius failus iš interneto.
+// Be interneto naudoja išsaugotą kopiją.
+const CACHE = "fotovietos-v4";
 const APP_FILES = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icon.svg",
-  "./icon-192.png",
-  "./icon-512.png",
+  "./", "./index.html", "./vietos.js", "./manifest.webmanifest",
+  "./icon.svg", "./icon-192.png", "./icon-512.png",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ];
@@ -37,9 +33,11 @@ self.addEventListener("fetch", event => {
   const leaflet = url.hostname === "unpkg.com";
   if (!ownFile && !leaflet) return;
 
-  // Pirmiausia internetas (kad matytųsi atnaujinimai), be interneto – išsaugota kopija
+  // Savi failai imami be naršyklės talpyklos, kad atnaujinimai matytųsi iškart
+  const network = ownFile ? fetch(url.href, { cache: "no-cache" }) : fetch(request);
+
   event.respondWith(
-    fetch(request)
+    network
       .then(response => {
         if (response.ok) {
           const copy = response.clone();
