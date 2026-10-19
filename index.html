@@ -22,19 +22,24 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .total{display:inline-block;margin-top:4px;background:var(--gold);color:#fff;font-weight:700;font-size:13px;padding:2px 10px;border-radius:999px}
 .offline{background:#fff4d6;color:#7a5a00;padding:10px 16px;text-align:center;font-size:14px}
 .controls{position:sticky;top:0;z-index:1000;background:var(--cream);padding:10px 16px 6px;max-width:1200px;margin:0 auto}
-.search-row{display:flex;gap:6px;align-items:center}
+.search-row{display:flex;gap:6px;align-items:stretch}
 #search{flex:1;min-width:0;font-size:16px;padding:11px 12px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--text)}
 #search:focus{outline:3px solid rgba(201,151,63,.45);border-color:var(--gold)}
-.lang{display:flex;gap:3px;flex:0 0 auto}
-.lang button{background:#fff;color:var(--green);border:1px solid #d9d2c3;border-radius:8px;padding:6px 6px;font-weight:700;font-size:11px;min-width:30px;min-height:32px;cursor:pointer}
-.lang button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.lang{position:relative;flex:0 0 auto}
+#langBtn{height:100%;min-height:44px;padding:0 10px;border:1px solid #d9d2c3;border-radius:12px;background:#fff;color:var(--green);font-weight:700;font-size:14px;cursor:pointer}
+#langBtn[aria-expanded="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+#langMenu{position:absolute;right:0;top:calc(100% + 6px);z-index:1200;list-style:none;margin:0;padding:4px;min-width:160px;background:#fff;border:1px solid #d9d2c3;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+#langMenu button{display:flex;gap:10px;align-items:center;width:100%;padding:10px 12px;border:0;border-radius:8px;background:none;color:var(--text);font-size:15px;text-align:left;cursor:pointer}
+#langMenu button:hover{background:var(--cream)}
+#langMenu button[aria-current="true"]{background:var(--cream);font-weight:700}
+#langMenu b{min-width:24px;color:var(--green)}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;white-space:nowrap;border:1px solid #d9d2c3;background:#fff;color:var(--text);padding:7px 11px;border-radius:999px;font-size:13px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
 .chip .n{font-size:12px;font-weight:700;opacity:.75}
 .chips.types .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold)}
-.chip:focus-visible,.lang button:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.chip:focus-visible,#langBtn:focus-visible,#langMenu button:focus-visible,.card-main:focus-visible,.card-nav:focus-visible,.fab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .layout{max-width:1200px;margin:0 auto;padding:6px 16px 16px}
 #map{position:relative;isolation:isolate;height:45vh;min-height:280px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.08)}
 .count{font-size:15px;font-weight:600;margin:14px 2px 8px}
@@ -84,7 +89,10 @@ footer a{color:var(--green);font-weight:600}
   <div class="search-row">
     <label id="searchLabel" class="visually-hidden" for="search"></label>
     <input id="search" type="search" autocomplete="off">
-    <div id="lang" class="lang" role="group"></div>
+    <div class="lang">
+      <button id="langBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="langMenu"></button>
+      <ul id="langMenu" hidden></ul>
+    </div>
   </div>
   <div id="filters" class="chips" role="group"></div>
   <div id="types" class="chips types" role="group"></div>
@@ -101,14 +109,16 @@ footer a{color:var(--green);font-weight:600}
 <footer>
   <p id="note"></p>
   <p id="bot"></p>
-  <p>Versija 4</p>
+  <p>Versija 6</p>
 </footer>
 
 <button id="locate" class="fab" type="button">📍</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="vietos.js?v=4"></script>
+<script src="vietos.js?v=6"></script>
+<script src="vertimai.js?v=1"></script>
 <script>
+// ---------- Vertimai ----------
 const I18N = {
   lt: {
     sub: "Gražiausios vietos fotosesijoms Lietuvoje", total: "Iš viso vietų: {n}",
@@ -123,7 +133,7 @@ const I18N = {
     geoDenied: "Leiskite programėlei naudoti vietą (telefono nustatymuose) ir bandykite dar kartą.",
     geoFail: "Nepavyko nustatyti vietos. Įsijunkite GPS ir bandykite dar kartą.",
     note: "Koordinatės apytikslės. Mygtukas 🧭 atidaro Google Maps ir vietos ieško pagal pavadinimą. Dvaruose, muziejuose ir vienuolynuose profesionaliai fotosesijai gali reikėti leidimo ar mokesčio.",
-    botAsk: "Ieškote fotografo?", botLink: "Parašykite Irmantui Telegram'e", langAria: "Kalba"
+    botAsk: "Ieškote fotografo?", botLink: "Parašykite Irmantui Telegram'e", langAria: "Pasirinkti kalbą"
   },
   en: {
     sub: "The most beautiful photo shoot locations in Lithuania", total: "Total places: {n}",
@@ -138,7 +148,7 @@ const I18N = {
     geoDenied: "Allow the app to use your location (in phone settings) and try again.",
     geoFail: "Could not determine your location. Turn on GPS and try again.",
     note: "Coordinates are approximate. The 🧭 button opens Google Maps and searches by name. Manors, museums and monasteries may require a permit or fee for professional shoots.",
-    botAsk: "Looking for a photographer?", botLink: "Message Irmantas on Telegram", langAria: "Language"
+    botAsk: "Looking for a photographer?", botLink: "Message Irmantas on Telegram", langAria: "Choose language"
   },
   ru: {
     sub: "Лучшие места для фотосессий в Литве", total: "Всего мест: {n}",
@@ -153,37 +163,84 @@ const I18N = {
     geoDenied: "Разрешите приложению доступ к местоположению (в настройках телефона) и попробуйте снова.",
     geoFail: "Не удалось определить местоположение. Включите GPS и попробуйте снова.",
     note: "Координаты примерные. Кнопка 🧭 открывает Google Maps и ищет по названию. В усадьбах, музеях и монастырях для профессиональной съёмки может понадобиться разрешение или плата.",
-    botAsk: "Ищете фотографа?", botLink: "Напишите Ирмантасу в Telegram", langAria: "Язык"
+    botAsk: "Ищете фотографа?", botLink: "Напишите Ирмантасу в Telegram", langAria: "Выбрать язык"
+  },
+  de: {
+    sub: "Die schönsten Fotoshooting-Orte in Litauen", total: "Orte insgesamt: {n}",
+    offline: "Kein Internet. Die Karte lädt, sobald Sie wieder online sind.",
+    search: "Suche: Park, Burg, Vilnius...", searchLabel: "Ort suchen",
+    tagsAria: "Wofür der Ort geeignet ist", typesAria: "Art des Ortes", mapAria: "Karte", listAria: "Liste der Orte",
+    allTags: "Alle", allTypes: "Alle Arten", count: "{a} von {b} Orten", sorted: " · nach Entfernung",
+    empty: "Nichts gefunden. Versuchen Sie ein anderes Wort oder wählen Sie „Alle“ und „Alle Arten“.",
+    showOnMap: "Auf der Karte zeigen", openMaps: "In Google Maps öffnen", layerMap: "Karte", layerSat: "Satellit",
+    you: "Sie sind hier", locate: "Meinen Standort und die nächsten Orte zeigen",
+    noGeo: "Dieses Gerät kann den Standort nicht bestimmen.",
+    geoDenied: "Erlauben Sie der App den Standortzugriff (in den Telefoneinstellungen) und versuchen Sie es erneut.",
+    geoFail: "Standort konnte nicht bestimmt werden. Schalten Sie GPS ein und versuchen Sie es erneut.",
+    note: "Koordinaten sind ungefähr. Die Taste 🧭 öffnet Google Maps und sucht nach Namen. In Gutshöfen, Museen und Klöstern kann für professionelle Shootings eine Genehmigung oder Gebühr nötig sein.",
+    botAsk: "Suchen Sie einen Fotografen?", botLink: "Schreiben Sie Irmantas auf Telegram", langAria: "Sprache wählen"
+  },
+  fr: {
+    sub: "Les plus beaux lieux de séance photo en Lituanie", total: "Lieux au total : {n}",
+    offline: "Pas d’internet. La carte se chargera dès le retour de la connexion.",
+    search: "Rechercher : parc, château, Vilnius...", searchLabel: "Rechercher un lieu",
+    tagsAria: "À quoi convient le lieu", typesAria: "Type de lieu", mapAria: "Carte", listAria: "Liste des lieux",
+    allTags: "Tous", allTypes: "Tous les types", count: "{a} lieux sur {b}", sorted: " · par distance",
+    empty: "Aucun résultat. Essayez un autre mot ou choisissez « Tous » et « Tous les types ».",
+    showOnMap: "Voir sur la carte", openMaps: "Ouvrir dans Google Maps", layerMap: "Carte", layerSat: "Satellite",
+    you: "Vous êtes ici", locate: "Afficher ma position et les lieux les plus proches",
+    noGeo: "Cet appareil ne peut pas déterminer la position.",
+    geoDenied: "Autorisez l’application à utiliser votre position (dans les réglages du téléphone) et réessayez.",
+    geoFail: "Impossible de déterminer votre position. Activez le GPS et réessayez.",
+    note: "Les coordonnées sont approximatives. Le bouton 🧭 ouvre Google Maps et recherche par nom. Les manoirs, musées et monastères peuvent exiger une autorisation ou des frais pour une séance professionnelle.",
+    botAsk: "Vous cherchez un photographe ?", botLink: "Écrivez à Irmantas sur Telegram", langAria: "Choisir la langue"
+  },
+  es: {
+    sub: "Los lugares más bonitos para sesiones de fotos en Lituania", total: "Lugares en total: {n}",
+    offline: "Sin internet. El mapa se cargará cuando vuelva la conexión.",
+    search: "Buscar: parque, castillo, Vilnius...", searchLabel: "Buscar un lugar",
+    tagsAria: "Para qué sirve el lugar", typesAria: "Tipo de lugar", mapAria: "Mapa", listAria: "Lista de lugares",
+    allTags: "Todos", allTypes: "Todos los tipos", count: "{a} de {b} lugares", sorted: " · por distancia",
+    empty: "No se encontró nada. Pruebe otra palabra o elija «Todos» y «Todos los tipos».",
+    showOnMap: "Ver en el mapa", openMaps: "Abrir en Google Maps", layerMap: "Mapa", layerSat: "Satélite",
+    you: "Usted está aquí", locate: "Mostrar mi ubicación y los lugares más cercanos",
+    noGeo: "Este dispositivo no puede determinar la ubicación.",
+    geoDenied: "Permita que la aplicación use su ubicación (en los ajustes del teléfono) e inténtelo de nuevo.",
+    geoFail: "No se pudo determinar su ubicación. Active el GPS e inténtelo de nuevo.",
+    note: "Las coordenadas son aproximadas. El botón 🧭 abre Google Maps y busca por nombre. Las mansiones, museos y monasterios pueden requerir permiso o pago para sesiones profesionales.",
+    botAsk: "¿Busca fotógrafo?", botLink: "Escriba a Irmantas en Telegram", langAria: "Elegir idioma"
   }
 };
 
+// Eilė: lt, en, ru, de, fr, es
 const TYPES = {
-  pilis:      { icon: "🏰", label: ["Pilis", "Castle", "Замок"], plural: ["Pilys", "Castles", "Замки"] },
-  dvaras:     { icon: "🏛️", label: ["Dvaras, rūmai", "Manor, palace", "Усадьба, дворец"], plural: ["Dvarai", "Manors", "Усадьбы"] },
-  parkas:     { icon: "🌳", label: ["Parkas", "Park", "Парк"], plural: ["Parkai", "Parks", "Парки"] },
-  gamta:      { icon: "🌲", label: ["Gamta", "Nature", "Природа"], plural: ["Gamta", "Nature", "Природа"] },
-  griuvesiai: { icon: "🧱", label: ["Griuvėsiai", "Ruins", "Руины"], plural: ["Griuvėsiai", "Ruins", "Руины"] },
-  sakralu:    { icon: "⛪", label: ["Bažnyčia, vienuolynas", "Church, monastery", "Храм, монастырь"], plural: ["Bažnyčios", "Churches", "Храмы"] },
-  kaimas:     { icon: "🏡", label: ["Senovinis kaimas", "Old village", "Старинная деревня"], plural: ["Kaimai", "Villages", "Деревни"] },
-  miestas:    { icon: "🏙️", label: ["Miestas", "Town", "Город"], plural: ["Miestai", "Towns", "Города"] },
-  pajurys:    { icon: "🌊", label: ["Pajūris", "Seaside", "Побережье"], plural: ["Pajūris", "Seaside", "Побережье"] },
-  retro:      { icon: "🚂", label: ["Retro vieta", "Retro spot", "Ретро-место"], plural: ["Retro", "Retro", "Ретро"] }
+  pilis:      { icon: "🏰", label: ["Pilis","Castle","Замок","Burg","Château","Castillo"], plural: ["Pilys","Castles","Замки","Burgen","Châteaux","Castillos"] },
+  dvaras:     { icon: "🏛️", label: ["Dvaras, rūmai","Manor, palace","Усадьба, дворец","Gutshof, Palast","Manoir, palais","Mansión, palacio"], plural: ["Dvarai","Manors","Усадьбы","Gutshöfe","Manoirs","Mansiones"] },
+  parkas:     { icon: "🌳", label: ["Parkas","Park","Парк","Park","Parc","Parque"], plural: ["Parkai","Parks","Парки","Parks","Parcs","Parques"] },
+  gamta:      { icon: "🌲", label: ["Gamta","Nature","Природа","Natur","Nature","Naturaleza"], plural: ["Gamta","Nature","Природа","Natur","Nature","Naturaleza"] },
+  griuvesiai: { icon: "🧱", label: ["Griuvėsiai","Ruins","Руины","Ruinen","Ruines","Ruinas"], plural: ["Griuvėsiai","Ruins","Руины","Ruinen","Ruines","Ruinas"] },
+  sakralu:    { icon: "⛪", label: ["Bažnyčia, vienuolynas","Church, monastery","Храм, монастырь","Kirche, Kloster","Église, monastère","Iglesia, monasterio"], plural: ["Bažnyčios","Churches","Храмы","Kirchen","Églises","Iglesias"] },
+  kaimas:     { icon: "🏡", label: ["Senovinis kaimas","Old village","Старинная деревня","Altes Dorf","Village ancien","Pueblo antiguo"], plural: ["Kaimai","Villages","Деревни","Dörfer","Villages","Pueblos"] },
+  miestas:    { icon: "🏙️", label: ["Miestas","Town","Город","Stadt","Ville","Ciudad"], plural: ["Miestai","Towns","Города","Städte","Villes","Ciudades"] },
+  pajurys:    { icon: "🌊", label: ["Pajūris","Seaside","Побережье","Küste","Bord de mer","Costa"], plural: ["Pajūris","Seaside","Побережье","Küste","Bord de mer","Costa"] },
+  retro:      { icon: "🚂", label: ["Retro vieta","Retro spot","Ретро-место","Retro-Ort","Lieu rétro","Lugar retro"], plural: ["Retro","Retro","Ретро","Retro","Rétro","Retro"] }
 };
 const TAGS = {
-  vestuvems:      { label: ["Vestuvėms", "Weddings", "Свадьбы"], color: "#c2255c", bg: "#fde2ec" },
-  poroms:         { label: ["Poroms", "Couples", "Пары"], color: "#c2410c", bg: "#ffedd5" },
-  seimai:         { label: ["Šeimai", "Family", "Семья"], color: "#2b7a3d", bg: "#dcfce7" },
-  portretams:     { label: ["Portretams", "Portraits", "Портреты"], color: "#1d4ed8", bg: "#dbeafe" },
-  menui:          { label: ["Meninėms", "Artistic", "Арт"], color: "#6d28d9", bg: "#ede9fe" },
-  pasivaikscioti: { label: ["Pasivaikščiojimui", "Walks", "Прогулки"], color: "#0f766e", bg: "#ccfbf1" }
+  vestuvems:      { label: ["Vestuvėms","Weddings","Свадьбы","Hochzeiten","Mariages","Bodas"], color: "#c2255c", bg: "#fde2ec" },
+  poroms:         { label: ["Poroms","Couples","Пары","Paare","Couples","Parejas"], color: "#c2410c", bg: "#ffedd5" },
+  seimai:         { label: ["Šeimai","Family","Семья","Familie","Famille","Familia"], color: "#2b7a3d", bg: "#dcfce7" },
+  portretams:     { label: ["Portretams","Portraits","Портреты","Porträts","Portraits","Retratos"], color: "#1d4ed8", bg: "#dbeafe" },
+  menui:          { label: ["Meninėms","Artistic","Арт","Künstlerisch","Artistique","Artístico"], color: "#6d28d9", bg: "#ede9fe" },
+  pasivaikscioti: { label: ["Pasivaikščiojimui","Walks","Прогулки","Spaziergänge","Balades","Paseos"], color: "#0f766e", bg: "#ccfbf1" }
 };
 
 // ---------- Kalba ----------
-const LANGS = ["lt", "en", "ru"];
+const LANGS = ["lt", "en", "ru", "de", "fr", "es"];
+const LANG_NAMES = { lt: "Lietuvių", en: "English", ru: "Русский", de: "Deutsch", fr: "Français", es: "Español" };
 let savedLang = null;
 try { savedLang = localStorage.getItem("lang"); } catch (e) {}
-const LANG = LANGS.includes(savedLang) ? savedLang
-  : ((navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "lt");
+const navLang = (navigator.language || "").slice(0, 2).toLowerCase();
+const LANG = LANGS.includes(savedLang) ? savedLang : (LANGS.includes(navLang) ? navLang : "lt");
 const LI = LANGS.indexOf(LANG);
 const T = I18N[LANG];
 document.documentElement.lang = LANG;
@@ -192,7 +249,8 @@ document.documentElement.lang = LANG;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const tr = v => Array.isArray(v) ? (v[LI] || v[0] || "") : String(v || "");
+// Jei vertimo nėra, rodoma angliškai
+const tr = v => Array.isArray(v) ? (v[LI] || (LI > 2 ? v[1] : "") || v[0] || "") : String(v || "");
 const allText = v => Array.isArray(v) ? v.join(" ") : String(v || "");
 const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const typeOf = s => TYPES[s.t] || TYPES.gamta;
@@ -208,6 +266,7 @@ function distanceKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+// Paieška veikia visomis kalbomis
 const SEARCH_TEXT = new Map(SPOTS.map(s => {
   const t = typeOf(s);
   return [s.id, norm([s.n, s.p, allText(s.d), allText(s.tip), allText(t.label), allText(t.plural),
@@ -228,16 +287,45 @@ $("note").textContent = T.note;
 $("bot").innerHTML = `${esc(T.botAsk)} <a href="https://t.me/vestuviu_fotografas_bot" target="_blank" rel="noopener">${esc(T.botLink)}</a>`;
 $("locate").setAttribute("aria-label", T.locate);
 
-const langEl = $("lang");
-langEl.setAttribute("aria-label", T.langAria);
-langEl.innerHTML = LANGS
-  .map(l => `<button type="button" data-lang="${l}" aria-pressed="${l === LANG}">${l.toUpperCase()}</button>`)
+// ---------- Kalbos mygtukas su išskleidžiamu sąrašu ----------
+const langBtn = $("langBtn");
+const langMenu = $("langMenu");
+langBtn.textContent = `${LANG.toUpperCase()} ▾`;
+langBtn.setAttribute("aria-label", `${T.langAria}: ${LANG_NAMES[LANG]}`);
+langMenu.setAttribute("aria-label", T.langAria);
+langMenu.innerHTML = LANGS
+  .map(l => `<li><button type="button" data-lang="${l}" lang="${l}"${l === LANG ? ' aria-current="true"' : ""}><b>${l.toUpperCase()}</b> ${LANG_NAMES[l]}</button></li>`)
   .join("");
-langEl.addEventListener("click", e => {
+
+function openLang() {
+  langMenu.hidden = false;
+  langBtn.setAttribute("aria-expanded", "true");
+  const cur = langMenu.querySelector('[aria-current="true"]') || langMenu.querySelector("button");
+  if (cur) cur.focus();
+}
+function closeLang(focusBtn) {
+  langMenu.hidden = true;
+  langBtn.setAttribute("aria-expanded", "false");
+  if (focusBtn) langBtn.focus();
+}
+langBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  langMenu.hidden ? openLang() : closeLang(false);
+});
+langMenu.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || b.dataset.lang === LANG) return;
-  try { localStorage.setItem("lang", b.dataset.lang); } catch (err) {}
+  if (!b) return;
+  const l = b.dataset.lang;
+  closeLang(true);
+  if (l === LANG) return;
+  try { localStorage.setItem("lang", l); } catch (err) {}
   location.reload();
+});
+document.addEventListener("click", e => {
+  if (!langMenu.hidden && !e.target.closest(".lang")) closeLang(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !langMenu.hidden) closeLang(true);
 });
 
 // ---------- Būsena ----------
