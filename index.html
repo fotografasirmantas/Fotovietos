@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1a3c34">
 <meta name="description" content="Gražiausios Lietuvos vietos fotosesijoms: pilys, dvarai, parkai, gamta.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FotoVietos">
 <title>FotoVietos LT</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -64,6 +67,12 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 footer{max-width:1200px;margin:0 auto;padding:8px 16px 100px;color:var(--muted);font-size:13px}
 footer a{color:var(--green);font-weight:600}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.install{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--green);color:#fff;padding:10px 48px 10px 16px;position:relative;font-size:14px}
+.install[hidden]{display:none}
+.install p{margin:0;flex:1 1 220px}
+#installBtn,.install-link{background:var(--gold);color:#fff;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+#installBtn[hidden],.install-link[hidden]{display:none}
+.install-x{position:absolute;right:8px;top:6px;width:36px;height:36px;background:none;border:0;color:#fff;font-size:18px;cursor:pointer}
 @media (min-width:900px){
   .layout{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start}
   #map{position:sticky;top:150px;height:calc(100vh - 170px)}
@@ -84,6 +93,12 @@ footer a{color:var(--green);font-weight:600}
 </header>
 
 <div id="offline" class="offline" role="status" hidden></div>
+<div id="install" class="install" hidden>
+  <p id="installText"></p>
+  <button id="installBtn" type="button" hidden></button>
+  <a id="installChrome" class="install-link" hidden></a>
+  <button id="installClose" class="install-x" type="button">✕</button>
+</div>
 
 <div class="controls">
   <div class="search-row">
@@ -109,7 +124,7 @@ footer a{color:var(--green);font-weight:600}
 <footer>
   <p id="note"></p>
   <p id="bot"></p>
-  <p>Versija 6</p>
+  <p>Versija 7</p>
 </footer>
 
 <button id="locate" class="fab" type="button">📍</button>
@@ -472,6 +487,85 @@ locateBtn.addEventListener("click", () => {
 });
 
 render({ fit: true });
+
+// ---------- Programėlės įdiegimas ----------
+const INSTALL = {
+  lt: { btn: "📲 Įdiegti programėlę", ask: "Įsidiekite FotoVietos į telefoną ir atidarykite kaip programėlę.",
+        ios: "Kaip įdiegti: paspauskite „Bendrinti“ ⬆️ (kartais per ⋯ meniu), tada „Į pradžios ekraną“.",
+        inapp: "Programėlę įdiegti galima tik naršyklėje. Paspauskite ⋮ arba ⋯ ir pasirinkite „Atidaryti naršyklėje“.",
+        android: "Kaip įdiegti: Chrome meniu ⋮ pasirinkite „Įdiegti programą“ arba „Pridėti prie pradžios ekrano“.",
+        chrome: "Atidaryti Chrome", close: "Uždaryti" },
+  en: { btn: "📲 Install the app", ask: "Install FotoVietos on your phone and open it like an app.",
+        ios: "To install: tap Share ⬆️ (sometimes in the ⋯ menu), then “Add to Home Screen”.",
+        inapp: "The app can only be installed from a browser. Tap ⋮ or ⋯ and choose “Open in browser”.",
+        android: "To install: in the Chrome menu ⋮ choose “Install app” or “Add to Home screen”.",
+        chrome: "Open in Chrome", close: "Close" },
+  ru: { btn: "📲 Установить приложение", ask: "Установите FotoVietos на телефон и открывайте как приложение.",
+        ios: "Как установить: нажмите «Поделиться» ⬆️ (иногда в меню ⋯), затем «На экран „Домой“».",
+        inapp: "Установить приложение можно только из браузера. Нажмите ⋮ или ⋯ и выберите «Открыть в браузере».",
+        android: "Как установить: в меню Chrome ⋮ выберите «Установить приложение» или «Добавить на главный экран».",
+        chrome: "Открыть в Chrome", close: "Закрыть" },
+  de: { btn: "📲 App installieren", ask: "Installieren Sie FotoVietos auf Ihrem Handy und öffnen Sie es wie eine App.",
+        ios: "So geht’s: Tippen Sie auf „Teilen“ ⬆️ (manchmal im ⋯-Menü), dann „Zum Home-Bildschirm“.",
+        inapp: "Die App lässt sich nur im Browser installieren. Tippen Sie auf ⋮ oder ⋯ und wählen Sie „Im Browser öffnen“.",
+        android: "So geht’s: Im Chrome-Menü ⋮ „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.",
+        chrome: "In Chrome öffnen", close: "Schließen" },
+  fr: { btn: "📲 Installer l’application", ask: "Installez FotoVietos sur votre téléphone et ouvrez-le comme une application.",
+        ios: "Pour installer : touchez Partager ⬆️ (parfois dans le menu ⋯), puis « Sur l’écran d’accueil ».",
+        inapp: "L’application s’installe uniquement depuis un navigateur. Touchez ⋮ ou ⋯ puis « Ouvrir dans le navigateur ».",
+        android: "Pour installer : dans le menu Chrome ⋮, choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».",
+        chrome: "Ouvrir dans Chrome", close: "Fermer" },
+  es: { btn: "📲 Instalar la aplicación", ask: "Instale FotoVietos en su teléfono y ábralo como una aplicación.",
+        ios: "Para instalar: toque Compartir ⬆️ (a veces en el menú ⋯) y luego «Añadir a pantalla de inicio».",
+        inapp: "La aplicación solo se instala desde un navegador. Toque ⋮ o ⋯ y elija «Abrir en el navegador».",
+        android: "Para instalar: en el menú de Chrome ⋮ elija «Instalar aplicación» o «Añadir a pantalla de inicio».",
+        chrome: "Abrir en Chrome", close: "Cerrar" }
+};
+const IN = INSTALL[LANG] || INSTALL.en;
+const installEl = $("install");
+const ua = navigator.userAgent;
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(ua);
+const inApp = /FBAN|FBAV|FB_IAB|Instagram|Messenger|Telegram|Line\/|TikTok|Snapchat|; wv\)/i.test(ua);
+let installHidden = false;
+try { installHidden = localStorage.getItem("installHidden") === "1"; } catch (e) {}
+let deferredPrompt = null;
+
+$("installBtn").textContent = IN.btn;
+$("installChrome").textContent = IN.chrome;
+$("installChrome").href = "intent://" + location.host + location.pathname + "#Intent;scheme=https;package=com.android.chrome;end";
+$("installClose").setAttribute("aria-label", IN.close);
+
+function showInstall(text, mode) {
+  if (standalone || installHidden) return;
+  $("installText").textContent = text;
+  $("installBtn").hidden = mode !== "prompt";
+  $("installChrome").hidden = mode !== "chrome";
+  installEl.hidden = false;
+}
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstall(IN.ask, "prompt");
+});
+$("installBtn").addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  try { await deferredPrompt.userChoice; } catch (e) {}
+  deferredPrompt = null;
+  installEl.hidden = true;
+});
+window.addEventListener("appinstalled", () => { installEl.hidden = true; });
+$("installClose").addEventListener("click", () => {
+  installEl.hidden = true;
+  try { localStorage.setItem("installHidden", "1"); } catch (e) {}
+});
+
+if (inApp) showInstall(IN.inapp, isAndroid ? "chrome" : "");
+else if (isIOS) showInstall(IN.ios, "");
+else if (isAndroid) setTimeout(() => { if (!deferredPrompt) showInstall(IN.android, ""); }, 4000);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
