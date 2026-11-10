@@ -1,7 +1,8 @@
 {
-  "name": "FotoVietos LT – vietos fotosesijoms",
+  "name": "FotoVietos LT",
   "short_name": "FotoVietos",
-  "description": "Gražiausios Lietuvos vietos fotosesijoms: pilys, dvarai, gamta.",
+  "description": "Gražiausios Lietuvos vietos fotosesijoms: pilys, dvarai, parkai, gamta.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,7 +12,6 @@
   "lang": "lt",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
